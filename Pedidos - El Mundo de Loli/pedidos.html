@@ -1,0 +1,2375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pedidos · El Mundo de Loli</title>
+<link rel="icon" href="assets/iso-rosa.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --ink:#3A2F38; --soft:#7d7079; --line:#ece3e8;
+  --rosa:#EA9AB2; --rosaD:#C97F9C; --lila:#EFCFE3; --menta:#EAF2D7;
+  --celeste:#B3DEE2; --turq:#4E9EA3; --cream:#FCFBF9;
+  --verde:#7a9a5f; --verdeBg:#E3F0D9;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Quicksand,system-ui,sans-serif;color:var(--ink);background:var(--cream)}
+h1,h2,h3{font-family:Fredoka,system-ui,sans-serif;font-weight:600;margin:0}
+select{background-color:#FBF7F5;color:var(--ink)}
+select option{background-color:#fff;color:var(--ink)}
+button{font-family:Quicksand,system-ui,sans-serif;cursor:pointer}
+input,select,textarea{font-family:Quicksand,system-ui,sans-serif;font-size:14px;color:var(--ink)}
+::placeholder{color:#b9aeb5}
+
+/* ---- layout ---- */
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 28px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:20;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{width:32px;height:auto}
+.brand .name{font-family:Fredoka;font-weight:600;font-size:17px;letter-spacing:.02em}
+.brand .sub{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-top:1px}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+nav{display:flex;gap:6px;padding:14px 28px 0}
+nav button{padding:9px 18px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--soft);font-weight:600;font-size:14px}
+nav button.active{background:var(--rosa);border-color:var(--rosa);color:#fff}
+
+main{padding:20px 28px 60px;max-width:1560px;margin:0 auto}
+.tabpanel{display:none}
+.tabpanel.active{display:block}
+
+.btn{padding:9px 16px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:600;font-size:13.5px;white-space:nowrap}
+.btn:hover{border-color:var(--rosaD)}
+.btn-primary{background:var(--rosa);border-color:var(--rosa);color:#fff}
+.btn-primary:hover{background:var(--rosaD);border-color:var(--rosaD)}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--soft)}
+.btn-danger{background:transparent;border-color:var(--line);color:#c0546f}
+.btn-danger:hover{border-color:#c0546f;background:#fbeef1}
+.btn-sm{padding:5px 10px;font-size:12.5px;border-radius:8px}
+
+/* ---- filter pills ---- */
+.search-row{margin:18px 0 0}
+.search-row input{width:100%;max-width:380px;padding:10px 16px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:14px;color:var(--ink)}
+.search-row input:focus{outline:none;border-color:var(--rosa)}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:18px 0}
+.pill{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;color:var(--soft)}
+.pill.active{background:var(--ink);border-color:var(--ink);color:#fff}
+.filters select{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--soft);font-weight:600;font-size:13px}
+
+.week-nav{display:flex;align-items:center;gap:12px;margin:-6px 0 18px;flex-wrap:wrap}
+.week-nav .week-label{font-family:Fredoka;font-weight:600;font-size:14.5px;color:var(--ink)}
+
+/* ---- table ---- */
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-family:Fredoka;font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);background:#FBF7F5}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#FBF7F5}
+tbody tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.empty{padding:44px 20px;text-align:center;color:var(--soft);font-size:14.5px}
+
+.badge{display:inline-block;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700}
+.saldo-ok{color:var(--verde);font-weight:700}
+.saldo-pend{color:var(--rosaD);font-weight:700}
+
+/* ---- catalogo ---- */
+.cat-group{margin-bottom:26px}
+.prod-summary{background:#FBF7F5;border:1px solid var(--line);border-radius:14px;padding:14px 18px;font-size:14.5px;color:var(--soft);margin-bottom:24px}
+.prod-summary strong{font-family:Fredoka;font-size:16px}
+
+/* ---- Dashboard financiero ---- */
+.subnav{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 24px}
+.subnav button{padding:8px 15px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--soft);font-weight:600;font-size:13px}
+.subnav button.active{background:var(--ink);border-color:var(--ink);color:#fff}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:8px}
+.kpi-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}
+.kpi-card .kpi-label{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);font-weight:600}
+.kpi-card .kpi-value{font-family:Fredoka;font-weight:600;font-size:23px;color:var(--ink);margin-top:8px}
+.kpi-card .kpi-value.accent{color:var(--rosaD)}
+.kpi-card .kpi-value.ok{color:var(--verde)}
+
+.chart-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin-bottom:22px}
+.chart-card h3{font-size:15px;margin-bottom:16px}
+.bar-list{display:flex;flex-direction:column}
+.bar-row{display:grid;grid-template-columns:150px 1fr 96px;align-items:center;gap:10px;margin-bottom:9px}
+.bar-label{font-size:12.5px;color:var(--ink);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{height:14px;background:#F1E9EC;border-radius:999px;overflow:hidden}
+.bar-fill{height:100%;border-radius:999px}
+.bar-value{font-size:12.5px;font-weight:700;color:var(--ink)}
+
+.stat-inline{display:flex;flex-wrap:wrap;gap:28px;margin-bottom:22px}
+.stat-inline .stat{min-width:140px}
+.stat-inline .stat .lbl{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--soft);font-weight:600}
+.stat-inline .stat .val{font-family:Fredoka;font-weight:600;font-size:19px;color:var(--ink);margin-top:5px}
+
+.periodo-nav{display:flex;align-items:center;gap:12px;margin:-6px 0 20px;flex-wrap:wrap}
+.periodo-nav .periodo-label{font-family:Fredoka;font-weight:600;font-size:14.5px;color:var(--ink)}
+
+@media (max-width:900px){ .kpi-grid{grid-template-columns:1fr 1fr} }
+@media (max-width:600px){ .kpi-grid{grid-template-columns:1fr} .bar-row{grid-template-columns:90px 1fr 70px} }
+.cat-group h3{margin:0 0 10px;font-size:16px;color:var(--rosaD)}
+
+/* ---- section heads ---- */
+.section-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:4px}
+.section-head p{margin:2px 0 0;color:var(--soft);font-size:13.5px}
+
+/* ---- modal ---- */
+.overlay{position:fixed;inset:0;background:rgba(58,47,56,.42);display:none;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto;z-index:100}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px;max-width:720px;width:100%;padding:30px 32px 32px;margin:auto}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-head h2{font-size:20px}
+.modal-close{border:none;background:transparent;font-size:22px;color:var(--soft);line-height:1;padding:4px}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--soft);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#FBF7F5}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--rosa)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+fieldset{border:1px solid var(--line);border-radius:14px;padding:16px 18px 18px;margin:0 0 18px}
+legend{font-family:Fredoka;font-weight:600;font-size:14px;color:var(--ink);padding:0 6px}
+
+.item-row{display:grid;grid-template-columns:2.2fr .7fr .9fr .9fr auto;gap:8px;align-items:center;margin-bottom:8px}
+.item-row select,.item-row input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#FBF7F5;color:var(--ink)}
+.item-row .hint{grid-column:1/2;font-size:11px;color:var(--rosaD);margin-top:2px}
+.mini-remove{border:none;background:transparent;color:var(--soft);font-size:18px;padding:4px}
+.mini-remove:hover{color:#c0546f}
+
+.pago-row{display:grid;grid-template-columns:1fr 1fr 1.4fr auto;gap:8px;align-items:center;margin-bottom:8px}
+.descuento-row{display:grid;grid-template-columns:1fr 2fr auto;gap:8px;align-items:center;margin-bottom:8px}
+
+.resumen-box{background:#FBF7F5;border-radius:14px;padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;font-size:14px;margin-bottom:18px}
+.resumen-box .label{color:var(--soft)}
+.resumen-box .val{text-align:right;font-weight:700;color:var(--ink)}
+
+.modal-actions{display:flex;justify-content:space-between;align-items:center;margin-top:22px;gap:10px;flex-wrap:wrap}
+.modal-actions .right{display:flex;gap:8px}
+
+.export-cards{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.export-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px}
+.export-card h3{font-size:16px;margin-bottom:8px}
+.export-card p{font-size:13px;color:var(--soft);line-height:1.55;margin:0 0 16px}
+
+.backup-note{font-size:12px;color:var(--soft);margin-top:10px;line-height:1.6}
+#fileRestore{display:none}
+
+@media (max-width:760px){
+  .grid2,.grid3{grid-template-columns:1fr}
+  .export-cards{grid-template-columns:1fr}
+  .item-row{grid-template-columns:1fr}
+  .pago-row{grid-template-columns:1fr}
+  .descuento-row{grid-template-columns:1fr}
+}
+
+/* ---- impresión / PDF ---- */
+.print-only{display:none}
+.print-header{display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:2px solid var(--rosa);margin-bottom:24px}
+.print-header img{width:40px;height:auto}
+.print-brand{font-family:Fredoka;font-weight:600;font-size:19px;color:var(--ink)}
+.print-title{font-size:12.5px;color:var(--soft);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.nota-pedido{margin-bottom:30px;padding-bottom:24px;border-bottom:1px dashed var(--line)}
+.nota-pedido:last-child{border-bottom:none}
+.nota-row-top{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.nota-label{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--rosaD);font-weight:700}
+.nota-value{font-size:14px;color:var(--ink);margin-top:3px}
+.nota-tabla{width:100%;border-collapse:collapse;margin:14px 0}
+.nota-tabla th,.nota-tabla td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}
+.nota-tabla th{font-family:Fredoka;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--soft);font-weight:600}
+.nota-tabla td.num,.nota-tabla th.num{text-align:right}
+.nota-tabla tfoot td{border-bottom:none;padding-top:5px;padding-bottom:5px}
+.nota-tabla tfoot tr:last-child td{font-weight:700;border-top:2px solid var(--ink);font-family:Fredoka;padding-top:9px}
+.nota-pagos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:14px;background:#FBF7F5;border-radius:10px;padding:14px 16px}
+.nota-pagos .saldo{font-weight:700;color:var(--rosaD)}
+.print-footer{margin-top:26px;text-align:center;font-family:Caveat;font-size:19px;color:var(--rosaD)}
+
+.nota-interna{margin-bottom:20px;padding-bottom:16px;border-bottom:1px dashed var(--line)}
+.nota-interna:last-child{border-bottom:none}
+.ni-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.ni-clienta{font-family:Fredoka;font-weight:600;font-size:17px;color:var(--ink)}
+.ni-fecha{font-family:Fredoka;font-weight:600;font-size:14px;color:var(--rosaD);white-space:nowrap}
+.ni-sub{font-size:12.5px;color:var(--soft);margin-top:3px}
+.ni-productos{margin:10px 0 0;padding-left:18px}
+.ni-productos li{font-size:13.5px;color:var(--ink);margin-bottom:3px}
+.ni-saldo{margin-top:8px;font-size:13px;font-weight:700;color:var(--rosaD)}
+
+@media print{
+  @page{ margin: 1.4cm 1.2cm; }
+  body *{visibility:hidden}
+  .print-only, .print-only *{visibility:visible}
+  .print-only{display:block;position:absolute;left:0;top:0;width:100%;padding:14px 8px}
+  .nota-pedido,.nota-interna{page-break-inside:avoid}
+}
+
+/* ---- login (celu-loli sync) ---- */
+.login-overlay{position:fixed;inset:0;background:var(--cream);display:flex;align-items:center;justify-content:center;z-index:200}
+.login-box{background:#fff;border:1px solid var(--line);border-radius:20px;padding:34px 32px;max-width:340px;width:100%;text-align:center}
+.login-box img{width:44px;margin-bottom:10px}
+.login-box h2{font-size:18px;margin-bottom:18px}
+.login-box .field{text-align:left}
+.login-box .btn-primary{width:100%;margin-top:6px}
+.login-error{color:#c0546f;font-size:12.5px;margin-top:10px;min-height:16px}
+
+/* ---- buzón de capturas (celu-loli sync) ---- */
+.badge-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#c0546f;color:#fff;font-size:11px;font-weight:700;margin-left:6px}
+.captura-card{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.captura-card .cc-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.captura-card .cc-tipo{font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;color:var(--rosaD)}
+.captura-card .cc-actions{display:flex;gap:8px;margin-top:10px}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN (celu-loli sync) ===================== -->
+<div class="login-overlay" id="loginOverlay" style="display:none">
+  <div class="login-box">
+    <img src="assets/iso-rosa.png" alt="">
+    <h2>El Mundo de Loli</h2>
+    <div class="field"><label>Email</label><input id="loginEmail" type="email" autocomplete="username"></div>
+    <div class="field"><label>Contraseña</label><input id="loginPassword" type="password" autocomplete="current-password"></div>
+    <button class="btn btn-primary" id="btnLogin" type="button">Entrar</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">
+    <img src="assets/iso-rosa.png" alt="El Mundo de Loli">
+    <div>
+      <div class="name">El Mundo de Loli</div>
+      <div class="sub">Pedidos · uso interno</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn" id="btnCapturas" type="button" style="display:none">Revisar capturas del celu<span class="badge-count" id="capturasCount" style="display:none">0</span></button>
+    <button class="btn" id="btnBackupDown">Descargar copia de seguridad</button>
+    <button class="btn" id="btnBackupUp">Restaurar copia de seguridad</button>
+    <input type="file" id="fileRestore" accept="application/json">
+  </div>
+</header>
+
+<nav>
+  <button class="tab-btn active" data-tab="pedidos">Pedidos</button>
+  <button class="tab-btn" data-tab="catalogo">Catálogo</button>
+  <button class="tab-btn" data-tab="produccion">Producción</button>
+  <button class="tab-btn" data-tab="dashboard">Dashboard</button>
+  <button class="tab-btn" data-tab="exportar">Exportar</button>
+</nav>
+
+<main>
+
+  <!-- ===================== PEDIDOS ===================== -->
+  <section id="tab-pedidos" class="tabpanel active">
+    <div class="section-head">
+      <div>
+        <h1>Pedidos</h1>
+        <p>Todos los pedidos cargados, con su estado y saldo.</p>
+      </div>
+      <button class="btn btn-primary" id="btnNuevoPedido">+ Nuevo pedido</button>
+    </div>
+
+    <div class="search-row">
+      <input type="search" id="buscadorClienta" placeholder="Buscar por nombre de clienta…">
+    </div>
+
+    <div class="filters">
+      <button class="pill active" data-filter="todos">Todos</button>
+      <button class="pill" data-filter="pendientes">Pendientes</button>
+      <button class="pill" data-filter="semana">Por semana</button>
+      <button class="pill" data-filter="saldo">Con saldo pendiente</button>
+      <select id="filtroEstado">
+        <option value="">Filtrar por estado…</option>
+      </select>
+    </div>
+
+    <div class="week-nav" id="weekNav" style="display:none">
+      <button class="btn btn-sm" id="weekPrev" type="button">‹ Semana anterior</button>
+      <span class="week-label" id="weekLabel"></span>
+      <button class="btn btn-sm" id="weekNext" type="button">Semana siguiente ›</button>
+      <button class="btn btn-sm btn-ghost" id="weekToday" type="button">Hoy</button>
+    </div>
+
+    <div class="table-wrap">
+      <table id="tablaPedidos">
+        <thead>
+          <tr>
+            <th>Clienta</th>
+            <th>Contacto</th>
+            <th>Cumpleañero/a</th>
+            <th>Temática</th>
+            <th>Entrega</th>
+            <th>Estado</th>
+            <th style="text-align:right">Total</th>
+            <th style="text-align:right">Saldo</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty" id="pedidosEmpty" style="display:none">No hay pedidos que coincidan con este filtro.</div>
+    </div>
+  </section>
+
+  <!-- ===================== PRODUCCION ===================== -->
+  <section id="tab-produccion" class="tabpanel">
+    <div class="section-head">
+      <div>
+        <h1>Producción</h1>
+        <p>Cuánto tenés que hacer de cada producto, sumando todos los pedidos con entrega esa semana.</p>
+      </div>
+    </div>
+
+    <div class="week-nav" id="prodWeekNav">
+      <button class="btn btn-sm" id="prodWeekPrev" type="button">‹ Semana anterior</button>
+      <span class="week-label" id="prodWeekLabel"></span>
+      <button class="btn btn-sm" id="prodWeekNext" type="button">Semana siguiente ›</button>
+      <button class="btn btn-sm btn-ghost" id="prodWeekToday" type="button">Hoy</button>
+    </div>
+
+    <div id="produccionWrap" style="margin-top:20px"></div>
+  </section>
+
+  <!-- ===================== CATALOGO ===================== -->
+  <section id="tab-catalogo" class="tabpanel">
+    <div class="section-head">
+      <div>
+        <h1>Catálogo interno</h1>
+        <p>Editá precios y datos de tus productos. Los pedidos ya cargados no cambian si acá modificás un precio.</p>
+      </div>
+      <button class="btn btn-primary" id="btnNuevoProducto">+ Nuevo producto</button>
+    </div>
+    <div id="catalogoWrap" style="margin-top:20px"></div>
+  </section>
+
+  <!-- ===================== DASHBOARD FINANCIERO ===================== -->
+  <section id="tab-dashboard" class="tabpanel">
+    <div class="section-head">
+      <div>
+        <h1>Dashboard financiero</h1>
+        <p>Cómo viene el negocio, calculado solo con tus pedidos y egresos. No es un sistema contable ni de facturación fiscal.</p>
+      </div>
+    </div>
+
+    <div class="subnav" id="dashSubnav">
+      <button class="active" data-sub="resumen">Resumen</button>
+      <button data-sub="egresos">Egresos</button>
+      <button data-sub="balance">Balance</button>
+      <button data-sub="productos">Productos</button>
+      <button data-sub="tematicas">Temáticas</button>
+      <button data-sub="pedidos">Pedidos</button>
+      <button data-sub="cobros">Cobros</button>
+      <button data-sub="proyeccion">Proyección</button>
+      <button data-sub="reportes">Reportes</button>
+    </div>
+
+    <div id="dash-resumen" class="dash-panel"></div>
+    <div id="dash-egresos" class="dash-panel" style="display:none"></div>
+    <div id="dash-balance" class="dash-panel" style="display:none"></div>
+    <div id="dash-productos" class="dash-panel" style="display:none"></div>
+    <div id="dash-tematicas" class="dash-panel" style="display:none"></div>
+    <div id="dash-pedidos" class="dash-panel" style="display:none"></div>
+    <div id="dash-cobros" class="dash-panel" style="display:none"></div>
+    <div id="dash-proyeccion" class="dash-panel" style="display:none"></div>
+    <div id="dash-reportes" class="dash-panel" style="display:none"></div>
+  </section>
+
+  <!-- ===================== EXPORTAR ===================== -->
+  <section id="tab-exportar" class="tabpanel">
+    <div class="section-head">
+      <div>
+        <h1>Exportar</h1>
+        <p>Descargá archivos listos para abrir en Excel.</p>
+      </div>
+    </div>
+    <div class="export-cards">
+      <div class="export-card">
+        <h3>Todos los pedidos</h3>
+        <p>Un archivo con cada pedido, sus productos, totales, pagos, saldo y estado.</p>
+        <button class="btn" id="btnExportTodos">Descargar CSV</button>
+      </div>
+      <div class="export-card">
+        <h3>Resumen mensual de ventas</h3>
+        <p>Un renglón por mes: cuántos pedidos, cuánto se vendió, cuánto se cobró y cuánto falta cobrar.</p>
+        <button class="btn" id="btnExportMensual">Descargar CSV</button>
+      </div>
+      <div class="export-card">
+        <h3>Pedidos de la semana</h3>
+        <p>Elegí un día de la semana que te interesa y generá un PDF con cada pedido, sus productos y sus contactos, listo para imprimir.</p>
+        <div class="field" style="margin-bottom:12px">
+          <label>Semana que incluye este día</label>
+          <input type="date" id="expWeekDate">
+        </div>
+        <button class="btn" id="btnExportSemana">Generar PDF para imprimir</button>
+        <p class="backup-note">Se abre el diálogo de impresión: elegí "Guardar como PDF" o imprimí directo.</p>
+      </div>
+      <div class="export-card">
+        <h3>Con saldo pendiente</h3>
+        <p>Solo los pedidos a los que todavía les falta cobrar algo.</p>
+        <button class="btn" id="btnExportSaldo">Descargar CSV</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===================== MODAL ===================== -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<div class="print-only" id="printArea"></div>
+
+<script>
+/* ================= DATOS BASE ================= */
+const STORAGE_KEY = 'loli_pedidos_data_v1';
+
+const CATEGORIAS = ['Toppers para torta','Minitoppers para cupcakes','Banderines','Cajas personalizadas','Sorpresitas','Complementos'];
+
+const ESTADOS = [
+  {id:'pendiente_sena', label:'Pendiente de seña', bg:'#F6DDE6', color:'#C97F9C'},
+  {id:'agendado', label:'Agendado', bg:'#E3F0F1', color:'#4E9EA3'},
+  {id:'en_diseno', label:'En diseño', bg:'#F8EEF4', color:'#C97F9C'},
+  {id:'enviado_aprobacion', label:'Enviado para aprobación', bg:'#EAF6F6', color:'#3E7F84'},
+  {id:'aprobado', label:'Aprobado', bg:'#E3F0D9', color:'#7A9A5F'},
+  {id:'impreso', label:'Impreso', bg:'#FBF0E4', color:'#B8895A'},
+  {id:'armado', label:'Armado', bg:'#F6E6ED', color:'#C97F9C'},
+  {id:'listo_entrega', label:'Listo para entrega', bg:'#FBEFD9', color:'#C08A3E'},
+  {id:'entregado', label:'Entregado', bg:'#DFF0DA', color:'#5A9A6A'}
+];
+
+const UNIDADES_SUGERIDAS = ['unidad','pack x10','pack x24','letra','plancha'];
+const FORMAS_PAGO_SUGERIDAS = ['Efectivo','Transferencia','Mercado Pago'];
+const EGRESO_CATEGORIAS_SUGERIDAS = ['Insumos','Consumibles','Envíos','Publicidad','Dominio / Hosting','Herramientas','Equipamiento','Servicios','Suscripciones','Otros'];
+
+const CATALOGO_INICIAL = [
+  {id:'topper-shaker-md', categoria:'Toppers para torta', nombre:'Cake Topper Shaker Mediano', descripcion:'Hasta 16 cm, capas y relieves. Ideal tortas de hasta 20 cm.', unidad:'unidad', precio:670, minimo:'', notas:''},
+  {id:'topper-shaker-gd', categoria:'Toppers para torta', nombre:'Cake Topper Shaker Grande', descripcion:'Hasta 23 cm, capas y relieves. Ideal tortas de hasta 30 cm.', unidad:'unidad', precio:740, minimo:'', notas:''},
+  {id:'topper-3d-md', categoria:'Toppers para torta', nombre:'Cake Topper 3D sin shaker Mediano', descripcion:'Hasta 16 cm, capas y relieves. Ideal tortas de hasta 20 cm.', unidad:'unidad', precio:490, minimo:'', notas:''},
+  {id:'topper-3d-gd', categoria:'Toppers para torta', nombre:'Cake Topper 3D sin shaker Grande', descripcion:'Hasta 23 cm, capas y relieves. Ideal tortas de hasta 30 cm.', unidad:'unidad', precio:560, minimo:'', notas:''},
+
+  {id:'minitopper-simple', categoria:'Minitoppers para cupcakes', nombre:'Minitopper para Cupcakes (una capa)', descripcion:'6 cm de alto. Pack de 10 unidades.', unidad:'pack x10', precio:250, minimo:'', notas:''},
+  {id:'minitopper-3d', categoria:'Minitoppers para cupcakes', nombre:'Minitopper para Cupcakes (capas y relieves)', descripcion:'6 cm de alto. Pack de 10 unidades.', unidad:'pack x10', precio:390, minimo:'', notas:''},
+
+  {id:'banderin-simple', categoria:'Banderines', nombre:'Banderín pieza simple', descripcion:'Una sola capa de impresión. Varios formatos.', unidad:'letra', precio:25, minimo:'', notas:''},
+  {id:'banderin-3d', categoria:'Banderines', nombre:'Banderín pieza 3D', descripcion:'Varias capas y apliques con relieve. Varios formatos.', unidad:'letra', precio:45, minimo:'', notas:''},
+
+  {id:'milkbox-simple', categoria:'Cajas personalizadas', nombre:'Milkbox Simple', descripcion:'7x7 cm de base, 14 cm de altura. Sin apliques en relieve.', unidad:'unidad', precio:50, minimo:'', notas:''},
+  {id:'milkbox-3d', categoria:'Cajas personalizadas', nombre:'Milkbox 3D', descripcion:'7x7 cm de base, 14 cm de altura. Apliques en relieve.', unidad:'unidad', precio:65, minimo:'', notas:''},
+  {id:'piramide-3d', categoria:'Cajas personalizadas', nombre:'Pirámide 3D', descripcion:'7x7 cm de base, 14 cm de altura. Apliques en relieve.', unidad:'unidad', precio:65, minimo:'', notas:''},
+  {id:'sushibox-3d', categoria:'Cajas personalizadas', nombre:'Sushi Box 3D', descripcion:'9x9 cm de base, forma cónica. Apliques en relieve.', unidad:'unidad', precio:75, minimo:'', notas:''},
+  {id:'lunchera-md', categoria:'Cajas personalizadas', nombre:'Lunchera Mediana', descripcion:'12x9x7 cm.', unidad:'unidad', precio:75, minimo:'', notas:''},
+  {id:'lunchera-gd', categoria:'Cajas personalizadas', nombre:'Lunchera Grande', descripcion:'16,5x12x10 cm.', unidad:'unidad', precio:85, minimo:'', notas:''},
+  {id:'popera', categoria:'Cajas personalizadas', nombre:'Popera', descripcion:'Caja de pop estándar.', unidad:'unidad', precio:50, minimo:'', notas:''},
+
+  {id:'libritos-colorear', categoria:'Sorpresitas', nombre:'Pack de Libritos para Colorear', descripcion:'8 imágenes para colorear, planchita de stickers y lápices de colores. A5. Desde 2 años.', unidad:'unidad', precio:95, minimo:'', notas:''},
+  {id:'maletitas', categoria:'Sorpresitas', nombre:'Maletitas Completas', descripcion:'8 imágenes para colorear, planchita de stickers y lápices de colores. Desde 3 años.', unidad:'unidad', precio:130, minimo:'', notas:''},
+  {id:'cuadernos-actividades', categoria:'Sorpresitas', nombre:'Cuadernos de Actividades', descripcion:'12 carillas de actividades didácticas y 1 lápiz. Desde 5-6 años.', unidad:'unidad', precio:90, minimo:'', notas:''},
+  {id:'memory', categoria:'Sorpresitas', nombre:'Memory', descripcion:'16 piezas para emparejar. Caja tipo mazo de cartas. Desde 2 años.', unidad:'unidad', precio:75, minimo:'', notas:''},
+  {id:'juego-oca', categoria:'Sorpresitas', nombre:'Juego de la Oca', descripcion:'Tablero, instrucciones, fichas y dados para armar. A4. Desde 5 años.', unidad:'unidad', precio:65, minimo:'', notas:''},
+  {id:'pizarra-actividades', categoria:'Sorpresitas', nombre:'Pizarra de Actividades Didácticas', descripcion:'12x18 cm. Ahorcado, tateti y tutifrutti. Incluye marcador magnético. Desde 6 años.', unidad:'unidad', precio:65, minimo:'', notas:''},
+  {id:'minilibretas', categoria:'Sorpresitas', nombre:'Mini Libretitas con Lápiz', descripcion:'50 hojas lisas, rulo metálico, tapa semi dura. 10x7 cm. Desde 4 años.', unidad:'unidad', precio:89, minimo:'', notas:''},
+  {id:'alcancias', categoria:'Sorpresitas', nombre:'Alcancías', descripcion:'Desde 3 años.', unidad:'unidad', precio:69, minimo:'', notas:''},
+
+  {id:'imanes-souvenir', categoria:'Complementos', nombre:'Imanes Souvenir', descripcion:'5,5x7 cm.', unidad:'pack x24', precio:590, minimo:'', notas:''},
+  {id:'tatuajes-temporales', categoria:'Complementos', nombre:'Tatuajes Temporales', descripcion:'Se cobra por plancha A4. Se calculan entre 20 y 30 unidades por hoja.', unidad:'plancha', precio:390, minimo:'', notas:''},
+  {id:'stickers', categoria:'Complementos', nombre:'Stickers', descripcion:'Se cobra por plancha A4, según tamaño y forma.', unidad:'plancha', precio:125, minimo:'', notas:''}
+];
+
+const DEFAULT_DATA = { catalogo: CATALOGO_INICIAL, pedidos: [], egresos: [] };
+
+/* ================= ESTADO / PERSISTENCIA ================= */
+let state = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return JSON.parse(JSON.stringify(DEFAULT_DATA));
+    const parsed = JSON.parse(raw);
+    if(!parsed.catalogo || !parsed.pedidos) throw new Error('formato inválido');
+    if(!parsed.egresos) parsed.egresos = [];
+    return parsed;
+  }catch(e){
+    console.warn('No se pudo leer la base guardada, se usa la de fábrica.', e);
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }
+}
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+/* ================= HELPERS ================= */
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function money(n){
+  n = Math.round(Number(n) || 0);
+  const neg = n < 0; n = Math.abs(n);
+  const s = n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return (neg?'-':'') + '$' + s;
+}
+function formatDate(iso){
+  if(!iso) return '—';
+  const p = iso.split('-');
+  if(p.length !== 3) return iso;
+  return `${p[2]}/${p[1]}/${p[0]}`;
+}
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function estadoInfo(id){ return ESTADOS.find(e=>e.id===id) || {id:'', label:'—', bg:'#eee', color:'#888'}; }
+function catalogoById(id){ return state.catalogo.find(p=>p.id===id); }
+
+function pedidoTotal(p){ return (p.items||[]).reduce((s,it)=> s + (Number(it.precio)||0) * (Number(it.cantidad)||0), 0); }
+function pedidoDescuento(p){ return (p.descuentos||[]).reduce((s,d)=> s + (Number(d.monto)||0), 0); }
+function pedidoTotalFinal(p){ return Math.max(0, pedidoTotal(p) - pedidoDescuento(p)); }
+function pedidoPagado(p){ return (p.pagos||[]).reduce((s,pg)=> s + (Number(pg.monto)||0), 0); }
+function pedidoSaldo(p){ return pedidoTotalFinal(p) - pedidoPagado(p); }
+function pedidoSenaSugerida(p){ return pedidoTotalFinal(p) * 0.5; }
+
+function mondayOfWeek(d){
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  date.setDate(date.getDate() + diff);
+  date.setHours(0,0,0,0);
+  return date;
+}
+function sundayOfWeek(d){
+  const m = mondayOfWeek(d);
+  const s = new Date(m);
+  s.setDate(s.getDate()+6);
+  s.setHours(23,59,59,999);
+  return s;
+}
+function isInWeek(iso, ref){
+  if(!iso) return false;
+  const d = new Date(iso + 'T00:00:00');
+  return d >= mondayOfWeek(ref) && d <= sundayOfWeek(ref);
+}
+function weekRangeLabel(ref){
+  const mon = mondayOfWeek(ref), sun = sundayOfWeek(ref);
+  const fmt = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+  return `${fmt(mon)} – ${fmt(sun)}/${sun.getFullYear()}`;
+}
+
+/* ---- rangos de período (Dashboard Financiero) ---- */
+const NOMBRES_MES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function rangoMes(ref){
+  const desde = new Date(ref.getFullYear(), ref.getMonth(), 1, 0,0,0,0);
+  const hasta = new Date(ref.getFullYear(), ref.getMonth()+1, 0, 23,59,59,999);
+  return {desde, hasta};
+}
+function rangoAnio(ref){
+  const desde = new Date(ref.getFullYear(), 0, 1, 0,0,0,0);
+  const hasta = new Date(ref.getFullYear(), 11, 31, 23,59,59,999);
+  return {desde, hasta};
+}
+function rangoSemana(ref){
+  return {desde: mondayOfWeek(ref), hasta: sundayOfWeek(ref)};
+}
+function mesLabel(ref){ return `${NOMBRES_MES[ref.getMonth()]} ${ref.getFullYear()}`; }
+function anioLabel(ref){ return String(ref.getFullYear()); }
+
+function pedidosEnRango(desde, hasta){
+  return state.pedidos.filter(p=>{
+    if(!p.fechaEntrega) return false;
+    const d = new Date(p.fechaEntrega + 'T00:00:00');
+    return d >= desde && d <= hasta;
+  });
+}
+function egresosEnRango(desde, hasta){
+  return state.egresos.filter(e=>{
+    if(!e.fecha) return false;
+    const d = new Date(e.fecha + 'T00:00:00');
+    return d >= desde && d <= hasta;
+  });
+}
+function statsPeriodo(pedidosPeriodo){
+  const facturacion = pedidosPeriodo.reduce((s,p)=> s + pedidoTotalFinal(p), 0);
+  const cobrado = pedidosPeriodo.reduce((s,p)=> s + pedidoPagado(p), 0);
+  const saldoPendiente = pedidosPeriodo.reduce((s,p)=> s + Math.max(0, pedidoSaldo(p)), 0);
+  const senaCobrada = pedidosPeriodo.reduce((s,p)=>{ const sn = pagoSena(p); return s + (sn ? Number(sn.monto)||0 : 0); }, 0);
+  const cantidad = pedidosPeriodo.length;
+  const ticketPromedio = cantidad ? facturacion / cantidad : 0;
+  const unidadesTotales = pedidosPeriodo.reduce((s,p)=> s + (p.items||[]).reduce((s2,it)=> s2 + (Number(it.cantidad)||0), 0), 0);
+  const lineasPromedio = cantidad ? pedidosPeriodo.reduce((s,p)=> s + (p.items||[]).length, 0) / cantidad : 0;
+  return {facturacion, cobrado, saldoPendiente, senaCobrada, cantidad, ticketPromedio, unidadesTotales, lineasPromedio};
+}
+function egresosTotal(egresosPeriodo){ return egresosPeriodo.reduce((s,e)=> s + (Number(e.monto)||0), 0); }
+
+function claveProducto(it){
+  return (it.productoId && it.productoId !== '__otros__') ? it.productoId : ('__' + normalizeText(it.nombre));
+}
+function estadisticasProductos(pedidosPeriodo){
+  const acc = {};
+  pedidosPeriodo.forEach(p=>{
+    (p.items||[]).forEach(it=>{
+      const key = claveProducto(it);
+      if(!acc[key]){
+        const prod = catalogoById(it.productoId);
+        acc[key] = { nombre: prod ? prod.nombre : (it.nombre || 'Producto sin nombre'), categoria: prod ? prod.categoria : 'Otros', cantidad:0, facturacion:0 };
+      }
+      acc[key].cantidad += Number(it.cantidad) || 0;
+      acc[key].facturacion += (Number(it.precio)||0) * (Number(it.cantidad)||0);
+    });
+  });
+  return Object.values(acc).sort((a,b)=> b.facturacion - a.facturacion);
+}
+function estadisticasTematicas(pedidosPeriodo){
+  const acc = {};
+  pedidosPeriodo.forEach(p=>{
+    const tem = (p.tematica||'').trim() || 'Sin temática';
+    const key = normalizeText(tem);
+    if(!acc[key]) acc[key] = { nombre: tem, pedidos:0, productos:0, facturacion:0, listaPedidos:[] };
+    acc[key].pedidos += 1;
+    acc[key].productos += (p.items||[]).reduce((s,it)=> s + (Number(it.cantidad)||0), 0);
+    acc[key].facturacion += pedidoTotalFinal(p);
+    acc[key].listaPedidos.push(p);
+  });
+  return Object.values(acc).sort((a,b)=> b.facturacion - a.facturacion);
+}
+
+function escCSV(v){
+  v = (v===undefined||v===null) ? '' : String(v);
+  if(/[",;\n]/.test(v)) v = '"' + v.replace(/"/g,'""') + '"';
+  return v;
+}
+function toCSV(headers, rows){
+  const lines = [headers.map(escCSV).join(';')];
+  rows.forEach(r => lines.push(r.map(escCSV).join(';')));
+  return '﻿' + lines.join('\r\n');
+}
+function downloadFile(filename, content, mime){
+  const blob = new Blob([content], {type: mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ================= NAV DE PESTAÑAS ================= */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab === 'catalogo') renderCatalogo();
+    if(btn.dataset.tab === 'produccion') renderProduccion();
+    if(btn.dataset.tab === 'dashboard') renderDashboard();
+  });
+});
+
+/* ================= DASHBOARD FINANCIERO: sub-navegación ================= */
+let dashSub = 'resumen';
+const DASH_RENDERERS = {}; // se completa más abajo, una función por sub-vista
+
+document.querySelectorAll('#dashSubnav button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#dashSubnav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    dashSub = btn.dataset.sub;
+    document.querySelectorAll('.dash-panel').forEach(p=> p.style.display = 'none');
+    document.getElementById('dash-'+dashSub).style.display = 'block';
+    renderDashboard();
+  });
+});
+
+function renderDashboard(){
+  const fn = DASH_RENDERERS[dashSub];
+  if(fn) fn();
+}
+
+/* ================= FILTROS DE PEDIDOS ================= */
+let filtroActivo = 'todos';
+let semanaRef = new Date();
+let busquedaClienta = '';
+
+function normalizeText(s){
+  return String(s||'').toLowerCase().normalize('NFD').replace(new RegExp('[\\u0300-\\u036f]', 'g'), '');
+}
+document.getElementById('buscadorClienta').addEventListener('input', e=>{
+  busquedaClienta = e.target.value;
+  renderPedidos();
+});
+
+function renderWeekNav(){
+  document.getElementById('weekNav').style.display = filtroActivo === 'semana' ? 'flex' : 'none';
+  document.getElementById('weekLabel').textContent = weekRangeLabel(semanaRef);
+}
+
+document.querySelectorAll('.filters .pill').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.filters .pill').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    filtroActivo = btn.dataset.filter;
+    if(filtroActivo === 'semana') semanaRef = new Date();
+    renderWeekNav();
+    renderPedidos();
+  });
+});
+document.getElementById('weekPrev').addEventListener('click', ()=>{
+  semanaRef = new Date(semanaRef); semanaRef.setDate(semanaRef.getDate()-7);
+  renderWeekNav(); renderPedidos();
+});
+document.getElementById('weekNext').addEventListener('click', ()=>{
+  semanaRef = new Date(semanaRef); semanaRef.setDate(semanaRef.getDate()+7);
+  renderWeekNav(); renderPedidos();
+});
+document.getElementById('weekToday').addEventListener('click', ()=>{
+  semanaRef = new Date();
+  renderWeekNav(); renderPedidos();
+});
+
+const selFiltroEstado = document.getElementById('filtroEstado');
+ESTADOS.forEach(e=>{
+  const o = document.createElement('option');
+  o.value = e.id; o.textContent = e.label;
+  selFiltroEstado.appendChild(o);
+});
+selFiltroEstado.addEventListener('change', renderPedidos);
+
+/* ================= RENDER: PEDIDOS ================= */
+function renderPedidos(){
+  let list = state.pedidos.slice();
+
+  if(filtroActivo === 'pendientes'){
+    list = list.filter(p => p.estado !== 'entregado');
+  }else if(filtroActivo === 'semana'){
+    list = list.filter(p => isInWeek(p.fechaEntrega, semanaRef));
+  }else if(filtroActivo === 'saldo'){
+    list = list.filter(p => pedidoSaldo(p) > 0.009);
+  }
+  if(selFiltroEstado.value){
+    list = list.filter(p => p.estado === selFiltroEstado.value);
+  }
+  if(busquedaClienta.trim()){
+    const q = normalizeText(busquedaClienta);
+    list = list.filter(p => normalizeText(p.clienta).includes(q));
+  }
+
+  list.sort((a,b)=> (a.fechaEntrega||'9999').localeCompare(b.fechaEntrega||'9999'));
+
+  const tbody = document.querySelector('#tablaPedidos tbody');
+  const empty = document.getElementById('pedidosEmpty');
+  tbody.innerHTML = '';
+
+  if(list.length === 0){
+    empty.style.display = 'block';
+  }else{
+    empty.style.display = 'none';
+    list.forEach(p=>{
+      const est = estadoInfo(p.estado);
+      const saldo = pedidoSaldo(p);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escHTML(p.clienta || '—')}</td>
+        <td>${escHTML(p.contacto || '—')}</td>
+        <td>${escHTML(p.nombreCumple || '—')}${p.edadCumple ? ' ('+escHTML(p.edadCumple)+')' : ''}</td>
+        <td>${escHTML(p.tematica || '—')}</td>
+        <td>${formatDate(p.fechaEntrega)}</td>
+        <td><span class="badge" style="background:${est.bg};color:${est.color}">${est.label}</span></td>
+        <td class="num">${money(pedidoTotalFinal(p))}</td>
+        <td class="num ${saldo>0.009?'saldo-pend':'saldo-ok'}">${money(saldo)}</td>
+      `;
+      tr.addEventListener('click', ()=> openPedidoForm(p.id));
+      tbody.appendChild(tr);
+    });
+  }
+}
+function escHTML(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function barListHTML(items, opts){
+  opts = opts || {};
+  const color = opts.colorVar || 'var(--rosa)';
+  const fmt = opts.formatValue || (v => v);
+  const max = Math.max(1, ...items.map(i=>Number(i.value)||0));
+  if(items.length === 0) return '<p style="color:var(--soft);font-size:13px">Sin datos para este período.</p>';
+  return `<div class="bar-list">` + items.map(it=>{
+    const pct = Math.max(2, Math.round(((Number(it.value)||0)/max)*100));
+    return `
+      <div class="bar-row">
+        <div class="bar-label" title="${escAttr(it.label)}">${escHTML(it.label)}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="bar-value">${fmt(it.value)}</div>
+      </div>`;
+  }).join('') + `</div>`;
+}
+
+/* ================= RENDER: CATALOGO ================= */
+function renderCatalogo(){
+  const wrap = document.getElementById('catalogoWrap');
+  wrap.innerHTML = '';
+
+  const categoriasPresentes = CATEGORIAS.concat(
+    [...new Set(state.catalogo.map(p=>p.categoria))].filter(c=>!CATEGORIAS.includes(c))
+  );
+
+  categoriasPresentes.forEach(cat=>{
+    const productos = state.catalogo.filter(p=>p.categoria === cat);
+    if(productos.length === 0) return;
+    const group = document.createElement('div');
+    group.className = 'cat-group';
+    group.innerHTML = `<h3>${escHTML(cat)}</h3>`;
+    const tableWrap = document.createElement('div');
+    tableWrap.className = 'table-wrap';
+    const table = document.createElement('table');
+    table.innerHTML = `
+      <thead><tr>
+        <th>Producto</th><th>Unidad de venta</th><th style="text-align:right">Precio</th><th>Mínimo</th>
+      </tr></thead>
+      <tbody></tbody>
+    `;
+    const tbody = table.querySelector('tbody');
+    productos.forEach(p=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escHTML(p.nombre)}</td>
+        <td>${escHTML(p.unidad || 'unidad')}</td>
+        <td class="num">${money(p.precio)}</td>
+        <td>${p.minimo ? escHTML(String(p.minimo)) : '—'}</td>
+      `;
+      tr.addEventListener('click', ()=> openProductoForm(p.id));
+      tbody.appendChild(tr);
+    });
+    tableWrap.appendChild(table);
+    group.appendChild(tableWrap);
+    wrap.appendChild(group);
+  });
+}
+
+/* ================= RENDER: PRODUCCION ================= */
+let produccionRef = new Date();
+
+function renderProdWeekNav(){
+  document.getElementById('prodWeekLabel').textContent = weekRangeLabel(produccionRef);
+}
+document.getElementById('prodWeekPrev').addEventListener('click', ()=>{
+  produccionRef = new Date(produccionRef); produccionRef.setDate(produccionRef.getDate()-7);
+  renderProdWeekNav(); renderProduccion();
+});
+document.getElementById('prodWeekNext').addEventListener('click', ()=>{
+  produccionRef = new Date(produccionRef); produccionRef.setDate(produccionRef.getDate()+7);
+  renderProdWeekNav(); renderProduccion();
+});
+document.getElementById('prodWeekToday').addEventListener('click', ()=>{
+  produccionRef = new Date();
+  renderProdWeekNav(); renderProduccion();
+});
+
+function produccionSemana(ref){
+  const acc = {};
+  state.pedidos.filter(p => isInWeek(p.fechaEntrega, ref)).forEach(p=>{
+    (p.items||[]).forEach(it=>{
+      const key = (it.productoId && it.productoId !== '__otros__') ? it.productoId : ('__' + normalizeText(it.nombre));
+      if(!acc[key]){
+        const prod = catalogoById(it.productoId);
+        acc[key] = {
+          nombre: prod ? prod.nombre : (it.nombre || 'Producto sin nombre'),
+          categoria: prod ? prod.categoria : 'Otros',
+          unidad: prod ? prod.unidad : (it.unidad || 'unidad'),
+          cantidad: 0
+        };
+      }
+      acc[key].cantidad += Number(it.cantidad) || 0;
+    });
+  });
+  return Object.values(acc);
+}
+
+function renderProduccion(){
+  const wrap = document.getElementById('produccionWrap');
+  wrap.innerHTML = '';
+
+  const pedidosSemana = state.pedidos.filter(p => isInWeek(p.fechaEntrega, produccionRef));
+  const saldoTotal = pedidosSemana.reduce((s,p)=> s + Math.max(0, pedidoSaldo(p)), 0);
+  const conSaldo = pedidosSemana.filter(p => pedidoSaldo(p) > 0.009).length;
+
+  const summary = document.createElement('div');
+  summary.className = 'prod-summary';
+  summary.innerHTML = `${pedidosSemana.length} pedido${pedidosSemana.length===1?'':'s'} con entrega esta semana · Saldo pendiente por cobrar: <strong style="color:${saldoTotal>0.009?'#C97F9C':'#7a9a5f'}">${money(saldoTotal)}</strong>${conSaldo>0 ? ` (${conSaldo} pedido${conSaldo===1?'':'s'} con saldo)` : ''}`;
+  wrap.appendChild(summary);
+
+  const items = produccionSemana(produccionRef);
+
+  if(items.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'No hay productos cargados en pedidos con entrega esta semana.';
+    wrap.appendChild(empty);
+    return;
+  }
+
+  const categoriasPresentes = CATEGORIAS.concat(
+    [...new Set(items.map(it=>it.categoria))].filter(c=>!CATEGORIAS.includes(c))
+  );
+
+  categoriasPresentes.forEach(cat=>{
+    const productos = items.filter(it=>it.categoria === cat).sort((a,b)=> a.nombre.localeCompare(b.nombre));
+    if(productos.length === 0) return;
+    const group = document.createElement('div');
+    group.className = 'cat-group';
+    group.innerHTML = `<h3>${escHTML(cat)}</h3>`;
+    const tableWrap = document.createElement('div');
+    tableWrap.className = 'table-wrap';
+    const table = document.createElement('table');
+    table.innerHTML = `
+      <thead><tr>
+        <th>Producto</th><th>Unidad de venta</th><th style="text-align:right">Cantidad a hacer</th>
+      </tr></thead>
+      <tbody></tbody>
+    `;
+    const tbody = table.querySelector('tbody');
+    productos.forEach(it=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escHTML(it.nombre)}</td>
+        <td>${escHTML(it.unidad || 'unidad')}</td>
+        <td class="num" style="font-weight:700">${it.cantidad}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+    tableWrap.appendChild(table);
+    group.appendChild(tableWrap);
+    wrap.appendChild(group);
+  });
+}
+
+/* ================= DASHBOARD: 1. RESUMEN ================= */
+function renderDashResumen(){
+  const wrap = document.getElementById('dash-resumen');
+  const hoy = new Date();
+  const {desde: dMes, hasta: hMes} = rangoMes(hoy);
+  const {desde: dSem, hasta: hSem} = rangoSemana(hoy);
+  const statsMes = statsPeriodo(pedidosEnRango(dMes, hMes));
+  const statsSemana = statsPeriodo(pedidosEnRango(dSem, hSem));
+  const egresosMes = egresosTotal(egresosEnRango(dMes, hMes));
+  const balanceMes = statsMes.cobrado - egresosMes;
+  const saldoGlobal = state.pedidos.reduce((s,p)=> s + Math.max(0, pedidoSaldo(p)), 0);
+
+  wrap.innerHTML = `
+    <p style="color:var(--soft);font-size:13px;margin:0 0 14px">Mes actual: <strong style="color:var(--ink)">${mesLabel(hoy)}</strong> · basado en la fecha de entrega de cada pedido</p>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">Facturación del mes</div><div class="kpi-value">${money(statsMes.facturacion)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Facturación de la semana</div><div class="kpi-value">${money(statsSemana.facturacion)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Pedidos del mes</div><div class="kpi-value">${statsMes.cantidad}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Pedidos de la semana</div><div class="kpi-value">${statsSemana.cantidad}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Ticket promedio del mes</div><div class="kpi-value">${money(statsMes.ticketPromedio)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Señas cobradas del mes</div><div class="kpi-value">${money(statsMes.senaCobrada)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Saldo pendiente de cobrar</div><div class="kpi-value accent">${money(saldoGlobal)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Balance estimado del mes</div><div class="kpi-value ${balanceMes>=0?'ok':'accent'}">${money(balanceMes)}</div></div>
+    </div>
+  `;
+}
+DASH_RENDERERS.resumen = renderDashResumen;
+
+/* ================= DASHBOARD: 2. EGRESOS ================= */
+let egresoFiltroCategoria = '';
+
+function categoriasEgresosUsadas(){
+  const usadas = [...new Set(state.egresos.map(e=>e.categoria).filter(Boolean))];
+  return EGRESO_CATEGORIAS_SUGERIDAS.concat(usadas.filter(c=>!EGRESO_CATEGORIAS_SUGERIDAS.includes(c)));
+}
+
+function renderDashEgresos(){
+  const wrap = document.getElementById('dash-egresos');
+  const categorias = categoriasEgresosUsadas();
+  let lista = state.egresos.slice();
+  if(egresoFiltroCategoria) lista = lista.filter(e=>e.categoria===egresoFiltroCategoria);
+  lista.sort((a,b)=> (b.fecha||'').localeCompare(a.fecha||''));
+  const total = egresosTotal(lista);
+
+  const filasTabla = lista.map(e=>`
+    <tr data-id="${e.id}">
+      <td>${formatDate(e.fecha)}</td>
+      <td>${escHTML(e.categoria||'—')}</td>
+      <td>${escHTML(e.descripcion||'—')}</td>
+      <td class="num">${money(e.monto)}</td>
+    </tr>
+  `).join('');
+
+  const porCategoria = {};
+  lista.forEach(e=>{ const c = e.categoria || 'Sin categoría'; porCategoria[c] = (porCategoria[c]||0) + (Number(e.monto)||0); });
+  const barrasCategoria = Object.entries(porCategoria).sort((a,b)=> b[1]-a[1]).map(([label,value])=>({label,value}));
+
+  wrap.innerHTML = `
+    <div class="section-head" style="margin-bottom:4px">
+      <p style="color:var(--soft);font-size:13.5px;margin:0">Total ${egresoFiltroCategoria ? ('en "'+escHTML(egresoFiltroCategoria)+'"') : 'de egresos'}: <strong style="color:var(--ink);font-family:Fredoka">${money(total)}</strong></p>
+      <button class="btn btn-primary" id="btnNuevoEgreso">+ Nuevo egreso</button>
+    </div>
+    <div class="filters">
+      <select id="filtroCategoriaEgreso">
+        <option value="">Todas las categorías</option>
+        ${categorias.map(c=>`<option value="${escAttr(c)}" ${c===egresoFiltroCategoria?'selected':''}>${escHTML(c)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th style="text-align:right">Monto</th></tr></thead>
+        <tbody>${filasTabla}</tbody>
+      </table>
+      ${lista.length===0 ? `<div class="empty">No hay egresos cargados${egresoFiltroCategoria?' en esta categoría':''}.</div>` : ''}
+    </div>
+    <div class="chart-card" style="margin-top:24px">
+      <h3>Distribución por categoría</h3>
+      ${barListHTML(barrasCategoria, {colorVar:'var(--turq)', formatValue: money})}
+    </div>
+  `;
+
+  document.getElementById('btnNuevoEgreso').addEventListener('click', ()=> openEgresoForm(null));
+  document.getElementById('filtroCategoriaEgreso').addEventListener('change', e=>{
+    egresoFiltroCategoria = e.target.value;
+    renderDashEgresos();
+  });
+  wrap.querySelectorAll('tbody tr').forEach(tr=>{
+    tr.style.cursor = 'pointer';
+    tr.addEventListener('click', ()=> openEgresoForm(tr.dataset.id));
+  });
+}
+DASH_RENDERERS.egresos = renderDashEgresos;
+
+function openEgresoForm(id){
+  const isNew = !id;
+  const original = isNew ? {id:uid(), fecha:todayISO(), categoria:EGRESO_CATEGORIAS_SUGERIDAS[0], descripcion:'', monto:0} : state.egresos.find(e=>e.id===id);
+  const draft = JSON.parse(JSON.stringify(original));
+  const categorias = categoriasEgresosUsadas();
+
+  openModal(`
+    <div class="modal-head">
+      <h2>${isNew ? 'Nuevo egreso' : 'Editar egreso'}</h2>
+      <button class="modal-close" id="mClose">&times;</button>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Fecha</label><input id="f_fecha" type="date" value="${draft.fecha||''}"></div>
+      <div class="field">
+        <label>Categoría</label>
+        <input id="f_categoria" list="dl_categoriasEgreso" value="${escAttr(draft.categoria)}">
+        <datalist id="dl_categoriasEgreso">${categorias.map(c=>`<option value="${escAttr(c)}">`).join('')}</datalist>
+      </div>
+    </div>
+    <div class="field"><label>Descripción</label><input id="f_descripcion" value="${escAttr(draft.descripcion)}" placeholder="Ej: papel para toppers"></div>
+    <div class="field"><label>Monto</label><input id="f_monto" type="number" min="0" step="1" value="${draft.monto}"></div>
+    <div class="modal-actions">
+      <div>${isNew ? '' : '<button class="btn btn-danger" id="mDelete">Eliminar egreso</button>'}</div>
+      <div class="right">
+        <button class="btn btn-ghost" id="mCancel">Cancelar</button>
+        <button class="btn btn-primary" id="mSave">Guardar</button>
+      </div>
+    </div>
+  `);
+
+  document.getElementById('mClose').onclick = closeModal;
+  document.getElementById('mCancel').onclick = closeModal;
+  if(!isNew){
+    document.getElementById('mDelete').onclick = ()=>{
+      if(confirm('¿Eliminar este egreso?')){
+        state.egresos = state.egresos.filter(e=>e.id!==id);
+        save(); closeModal(); renderDashEgresos();
+      }
+    };
+  }
+  document.getElementById('mSave').onclick = ()=>{
+    const categoria = document.getElementById('f_categoria').value.trim();
+    if(!categoria){ alert('Elegí o escribí una categoría.'); return; }
+    const nuevo = {
+      id: draft.id,
+      fecha: document.getElementById('f_fecha').value,
+      categoria,
+      descripcion: document.getElementById('f_descripcion').value.trim(),
+      monto: Number(document.getElementById('f_monto').value) || 0
+    };
+    if(isNew){ state.egresos.push(nuevo); }
+    else{ const idx = state.egresos.findIndex(e=>e.id===id); state.egresos[idx] = nuevo; }
+    save(); closeModal(); renderDashEgresos();
+  };
+}
+
+/* ================= DASHBOARD: 3. BALANCE ================= */
+let balanceModo = 'mes';
+let balanceRef = new Date();
+
+function renderDashBalance(){
+  const wrap = document.getElementById('dash-balance');
+  let rango, label;
+  if(balanceModo === 'semana'){ rango = rangoSemana(balanceRef); label = weekRangeLabel(balanceRef); }
+  else if(balanceModo === 'anio'){ rango = rangoAnio(balanceRef); label = anioLabel(balanceRef); }
+  else { rango = rangoMes(balanceRef); label = mesLabel(balanceRef); }
+
+  const pedidosPeriodo = pedidosEnRango(rango.desde, rango.hasta);
+  const ingresos = pedidosPeriodo.reduce((s,p)=> s + pedidoPagado(p), 0);
+  const egresos = egresosTotal(egresosEnRango(rango.desde, rango.hasta));
+  const ganancia = ingresos - egresos;
+
+  const N = balanceModo === 'anio' ? 5 : (balanceModo === 'semana' ? 8 : 6);
+  const historicos = [];
+  for(let i = N-1; i >= 0; i--){
+    let r, lbl;
+    if(balanceModo === 'semana'){
+      const ref = new Date(balanceRef); ref.setDate(ref.getDate() - 7*i);
+      r = rangoSemana(ref); lbl = weekRangeLabel(ref);
+    }else if(balanceModo === 'anio'){
+      const ref = new Date(balanceRef.getFullYear()-i, 0, 1);
+      r = rangoAnio(ref); lbl = anioLabel(ref);
+    }else{
+      const ref = new Date(balanceRef.getFullYear(), balanceRef.getMonth()-i, 1);
+      r = rangoMes(ref); lbl = mesLabel(ref);
+    }
+    const fact = pedidosEnRango(r.desde, r.hasta).reduce((s,p)=> s + pedidoTotalFinal(p), 0);
+    historicos.push({label: lbl, value: fact});
+  }
+
+  wrap.innerHTML = `
+    <div class="subnav" id="balanceModoNav" style="margin-top:0">
+      <button data-modo="semana" class="${balanceModo==='semana'?'active':''}">Semanal</button>
+      <button data-modo="mes" class="${balanceModo==='mes'?'active':''}">Mensual</button>
+      <button data-modo="anio" class="${balanceModo==='anio'?'active':''}">Anual</button>
+    </div>
+    <div class="periodo-nav">
+      <button class="btn btn-sm" id="balPrev" type="button">‹ Anterior</button>
+      <span class="periodo-label">${label}</span>
+      <button class="btn btn-sm" id="balNext" type="button">Siguiente ›</button>
+      <button class="btn btn-sm btn-ghost" id="balHoy" type="button">Actual</button>
+    </div>
+    <div class="stat-inline">
+      <div class="stat"><div class="lbl">Ingresos (cobrado)</div><div class="val">${money(ingresos)}</div></div>
+      <div class="stat"><div class="lbl">Egresos</div><div class="val">${money(egresos)}</div></div>
+      <div class="stat"><div class="lbl">Ganancia estimada</div><div class="val" style="color:${ganancia>=0?'#7a9a5f':'#C97F9C'}">${money(ganancia)}</div></div>
+    </div>
+    <div class="chart-card">
+      <h3>Facturación por ${balanceModo==='semana'?'semana':(balanceModo==='anio'?'año':'mes')} (últimos ${N})</h3>
+      ${barListHTML(historicos, {colorVar:'var(--rosa)', formatValue: money})}
+    </div>
+  `;
+
+  document.querySelectorAll('#balanceModoNav button').forEach(b=>{
+    b.addEventListener('click', ()=>{ balanceModo = b.dataset.modo; renderDashBalance(); });
+  });
+  document.getElementById('balPrev').addEventListener('click', ()=>{
+    if(balanceModo==='semana'){ balanceRef = new Date(balanceRef); balanceRef.setDate(balanceRef.getDate()-7); }
+    else if(balanceModo==='anio'){ balanceRef = new Date(balanceRef.getFullYear()-1, balanceRef.getMonth(), 1); }
+    else{ balanceRef = new Date(balanceRef.getFullYear(), balanceRef.getMonth()-1, 1); }
+    renderDashBalance();
+  });
+  document.getElementById('balNext').addEventListener('click', ()=>{
+    if(balanceModo==='semana'){ balanceRef = new Date(balanceRef); balanceRef.setDate(balanceRef.getDate()+7); }
+    else if(balanceModo==='anio'){ balanceRef = new Date(balanceRef.getFullYear()+1, balanceRef.getMonth(), 1); }
+    else{ balanceRef = new Date(balanceRef.getFullYear(), balanceRef.getMonth()+1, 1); }
+    renderDashBalance();
+  });
+  document.getElementById('balHoy').addEventListener('click', ()=>{ balanceRef = new Date(); renderDashBalance(); });
+}
+DASH_RENDERERS.balance = renderDashBalance;
+
+/* ================= DASHBOARD: 4. PRODUCTOS ================= */
+let productosRef = new Date();
+
+function renderDashProductos(){
+  const wrap = document.getElementById('dash-productos');
+  const {desde, hasta} = rangoMes(productosRef);
+  const stats = estadisticasProductos(pedidosEnRango(desde, hasta));
+
+  const masVendido = stats.length ? stats.slice().sort((a,b)=> b.cantidad - a.cantidad)[0] : null;
+  const unidadesTotales = stats.reduce((s,p)=> s + p.cantidad, 0);
+  const facturacionTotalProductos = stats.reduce((s,p)=> s + p.facturacion, 0);
+  const porCategoria = {};
+  stats.forEach(p=>{ porCategoria[p.categoria] = (porCategoria[p.categoria]||0) + p.cantidad; });
+  const categoriaTop = Object.entries(porCategoria).sort((a,b)=> b[1]-a[1])[0];
+
+  const filas = stats.map(p=>`
+    <tr>
+      <td>${escHTML(p.nombre)}</td>
+      <td>${escHTML(p.categoria)}</td>
+      <td class="num">${p.cantidad}</td>
+      <td class="num">${money(p.facturacion)}</td>
+    </tr>
+  `).join('');
+
+  const barras = stats.slice(0,8).map(p=>({label:p.nombre, value:p.cantidad}));
+
+  wrap.innerHTML = `
+    <div class="periodo-nav">
+      <button class="btn btn-sm" id="prodStatPrev" type="button">‹ Mes anterior</button>
+      <span class="periodo-label">${mesLabel(productosRef)}</span>
+      <button class="btn btn-sm" id="prodStatNext" type="button">Mes siguiente ›</button>
+      <button class="btn btn-sm btn-ghost" id="prodStatHoy" type="button">Actual</button>
+    </div>
+    <div class="stat-inline">
+      <div class="stat"><div class="lbl">Producto más vendido</div><div class="val" style="font-size:15px">${masVendido ? escHTML(masVendido.nombre) : '—'}</div></div>
+      <div class="stat"><div class="lbl">Categoría más vendida</div><div class="val" style="font-size:15px">${categoriaTop ? escHTML(categoriaTop[0]) : '—'}</div></div>
+      <div class="stat"><div class="lbl">Unidades vendidas</div><div class="val">${unidadesTotales}</div></div>
+    </div>
+    <div class="chart-card">
+      <h3>Productos más vendidos (por cantidad)</h3>
+      ${barListHTML(barras, {colorVar:'var(--turq)', formatValue: v=>v})}
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Producto</th><th>Categoría</th><th style="text-align:right">Cantidad</th><th style="text-align:right">Facturación</th></tr></thead>
+        <tbody>${filas}</tbody>
+        ${stats.length>0 ? `<tfoot><tr><td colspan="2" style="font-weight:700">Total (suma de todos los productos)</td><td class="num" style="font-weight:700">${unidadesTotales}</td><td class="num" style="font-weight:700">${money(facturacionTotalProductos)}</td></tr></tfoot>` : ''}
+      </table>
+      ${stats.length===0 ? '<div class="empty">No hay productos vendidos en este mes.</div>' : ''}
+    </div>
+  `;
+
+  document.getElementById('prodStatPrev').addEventListener('click', ()=>{ productosRef = new Date(productosRef.getFullYear(), productosRef.getMonth()-1, 1); renderDashProductos(); });
+  document.getElementById('prodStatNext').addEventListener('click', ()=>{ productosRef = new Date(productosRef.getFullYear(), productosRef.getMonth()+1, 1); renderDashProductos(); });
+  document.getElementById('prodStatHoy').addEventListener('click', ()=>{ productosRef = new Date(); renderDashProductos(); });
+}
+DASH_RENDERERS.productos = renderDashProductos;
+
+/* ================= DASHBOARD: 5. TEMÁTICAS ================= */
+let tematicasRef = new Date();
+
+function renderDashTematicas(){
+  const wrap = document.getElementById('dash-tematicas');
+  const {desde, hasta} = rangoMes(tematicasRef);
+  const stats = estadisticasTematicas(pedidosEnRango(desde, hasta));
+
+  const mesAnteriorRef = new Date(tematicasRef.getFullYear(), tematicasRef.getMonth()-1, 1);
+  const rangoAnterior = rangoMes(mesAnteriorRef);
+  const statsAnterior = estadisticasTematicas(pedidosEnRango(rangoAnterior.desde, rangoAnterior.hasta));
+  const facturacionAnteriorPorTematica = {};
+  statsAnterior.forEach(t=>{ facturacionAnteriorPorTematica[normalizeText(t.nombre)] = t.facturacion; });
+
+  const masPedida = stats.length ? stats.slice().sort((a,b)=> b.pedidos - a.pedidos)[0] : null;
+
+  const filas = stats.map(t=>{
+    const anterior = facturacionAnteriorPorTematica[normalizeText(t.nombre)] || 0;
+    const diff = t.facturacion - anterior;
+    const diffTxt = (anterior===0 && t.facturacion===0) ? '—' : `${diff>=0?'+':''}${money(diff)}`;
+    return `
+    <tr data-key="${escAttr(normalizeText(t.nombre))}">
+      <td>${escHTML(t.nombre)}</td>
+      <td class="num">${t.pedidos}</td>
+      <td class="num">${t.productos}</td>
+      <td class="num">${money(t.facturacion)}</td>
+      <td class="num" style="color:${diff>0?'#7a9a5f':(diff<0?'#C97F9C':'var(--soft)')}">${diffTxt}</td>
+    </tr>`;
+  }).join('');
+
+  const barras = stats.slice(0,8).map(t=>({label:t.nombre, value:t.facturacion}));
+
+  wrap.innerHTML = `
+    <div class="periodo-nav">
+      <button class="btn btn-sm" id="temPrev" type="button">‹ Mes anterior</button>
+      <span class="periodo-label">${mesLabel(tematicasRef)}</span>
+      <button class="btn btn-sm" id="temNext" type="button">Mes siguiente ›</button>
+      <button class="btn btn-sm btn-ghost" id="temHoy" type="button">Actual</button>
+    </div>
+    <div class="stat-inline">
+      <div class="stat"><div class="lbl">Temática más pedida</div><div class="val" style="font-size:15px">${masPedida ? escHTML(masPedida.nombre) : '—'}</div></div>
+      <div class="stat"><div class="lbl">Temáticas distintas</div><div class="val">${stats.length}</div></div>
+    </div>
+    <div class="chart-card">
+      <h3>Temáticas más vendidas (por facturación)</h3>
+      ${barListHTML(barras, {colorVar:'var(--rosa)', formatValue: money})}
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Temática</th><th style="text-align:right">Pedidos</th><th style="text-align:right">Productos</th><th style="text-align:right">Facturación</th><th style="text-align:right">Vs. mes anterior</th></tr></thead>
+        <tbody>${filas}</tbody>
+      </table>
+      ${stats.length===0 ? '<div class="empty">No hay pedidos con temática este mes.</div>' : ''}
+    </div>
+    <p style="font-size:12px;color:var(--soft);margin-top:10px">Hacé clic en una fila para ver el detalle de esa temática.</p>
+  `;
+
+  document.getElementById('temPrev').addEventListener('click', ()=>{ tematicasRef = new Date(tematicasRef.getFullYear(), tematicasRef.getMonth()-1, 1); renderDashTematicas(); });
+  document.getElementById('temNext').addEventListener('click', ()=>{ tematicasRef = new Date(tematicasRef.getFullYear(), tematicasRef.getMonth()+1, 1); renderDashTematicas(); });
+  document.getElementById('temHoy').addEventListener('click', ()=>{ tematicasRef = new Date(); renderDashTematicas(); });
+
+  wrap.querySelectorAll('tbody tr').forEach(tr=>{
+    tr.style.cursor = 'pointer';
+    tr.addEventListener('click', ()=>{
+      const t = stats.find(x=> normalizeText(x.nombre) === tr.dataset.key);
+      if(t) abrirDetalleTematica(t);
+    });
+  });
+}
+DASH_RENDERERS.tematicas = renderDashTematicas;
+
+function abrirDetalleTematica(t){
+  const productos = estadisticasProductos(t.listaPedidos);
+  const filasPedidos = t.listaPedidos.slice().sort((a,b)=> (a.fechaEntrega||'').localeCompare(b.fechaEntrega||'')).map(p=>{
+    const est = estadoInfo(p.estado);
+    return `
+    <tr>
+      <td>${escHTML(p.clienta||'—')}</td>
+      <td>${formatDate(p.fechaEntrega)}</td>
+      <td><span class="badge" style="background:${est.bg};color:${est.color}">${est.label}</span></td>
+      <td class="num">${money(pedidoTotalFinal(p))}</td>
+    </tr>`;
+  }).join('');
+  const filasProductos = productos.map(p=>`
+    <tr><td>${escHTML(p.nombre)}</td><td class="num">${p.cantidad}</td><td class="num">${money(p.facturacion)}</td></tr>
+  `).join('');
+
+  openModal(`
+    <div class="modal-head">
+      <h2>${escHTML(t.nombre)}</h2>
+      <button class="modal-close" id="mClose">&times;</button>
+    </div>
+    <div class="stat-inline" style="margin-bottom:18px">
+      <div class="stat"><div class="lbl">Pedidos</div><div class="val">${t.pedidos}</div></div>
+      <div class="stat"><div class="lbl">Unidades vendidas</div><div class="val">${t.productos}</div></div>
+      <div class="stat"><div class="lbl">Facturación total</div><div class="val">${money(t.facturacion)}</div></div>
+    </div>
+    <h3 style="font-size:14px;margin-bottom:10px">Productos solicitados</h3>
+    <div class="table-wrap" style="margin-bottom:20px">
+      <table><thead><tr><th>Producto</th><th style="text-align:right">Cantidad</th><th style="text-align:right">Facturación</th></tr></thead><tbody>${filasProductos}</tbody></table>
+    </div>
+    <h3 style="font-size:14px;margin-bottom:10px">Pedidos</h3>
+    <div class="table-wrap">
+      <table><thead><tr><th>Clienta</th><th>Entrega</th><th>Estado</th><th style="text-align:right">Total</th></tr></thead><tbody>${filasPedidos}</tbody></table>
+    </div>
+    <div class="modal-actions">
+      <div></div>
+      <div class="right"><button class="btn btn-primary" id="mCancel">Cerrar</button></div>
+    </div>
+  `);
+  document.getElementById('mClose').onclick = closeModal;
+  document.getElementById('mCancel').onclick = closeModal;
+}
+
+/* ================= DASHBOARD: 6. PEDIDOS (estadísticas) ================= */
+let pedidosStatRef = new Date();
+
+function renderDashPedidosStat(){
+  const wrap = document.getElementById('dash-pedidos');
+  const {desde, hasta} = rangoMes(pedidosStatRef);
+  const pedidosMes = pedidosEnRango(desde, hasta);
+  const statsMes = statsPeriodo(pedidosMes);
+  const hoy = new Date();
+  const {desde: dSem, hasta: hSem} = rangoSemana(hoy);
+  const statsSemana = statsPeriodo(pedidosEnRango(dSem, hSem));
+
+  const mayor = pedidosMes.length ? pedidosMes.slice().sort((a,b)=> pedidoTotalFinal(b) - pedidoTotalFinal(a))[0] : null;
+
+  wrap.innerHTML = `
+    <div class="periodo-nav">
+      <button class="btn btn-sm" id="pedStatPrev" type="button">‹ Mes anterior</button>
+      <span class="periodo-label">${mesLabel(pedidosStatRef)}</span>
+      <button class="btn btn-sm" id="pedStatNext" type="button">Mes siguiente ›</button>
+      <button class="btn btn-sm btn-ghost" id="pedStatHoy" type="button">Actual</button>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">Pedidos del mes</div><div class="kpi-value">${statsMes.cantidad}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Pedidos de esta semana</div><div class="kpi-value">${statsSemana.cantidad}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Ticket promedio</div><div class="kpi-value">${money(statsMes.ticketPromedio)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Productos promedio por pedido</div><div class="kpi-value">${statsMes.lineasPromedio.toFixed(1)}</div></div>
+    </div>
+    <div class="chart-card">
+      <h3>Pedido de mayor valor del mes</h3>
+      ${mayor
+        ? `<p style="font-size:14px;margin:0"><strong style="font-family:Fredoka">${escHTML(mayor.clienta||'—')}</strong> — ${formatDate(mayor.fechaEntrega)} — <strong style="color:var(--rosaD)">${money(pedidoTotalFinal(mayor))}</strong></p>`
+        : '<p style="color:var(--soft);font-size:13px">No hay pedidos este mes.</p>'}
+    </div>
+  `;
+
+  document.getElementById('pedStatPrev').addEventListener('click', ()=>{ pedidosStatRef = new Date(pedidosStatRef.getFullYear(), pedidosStatRef.getMonth()-1, 1); renderDashPedidosStat(); });
+  document.getElementById('pedStatNext').addEventListener('click', ()=>{ pedidosStatRef = new Date(pedidosStatRef.getFullYear(), pedidosStatRef.getMonth()+1, 1); renderDashPedidosStat(); });
+  document.getElementById('pedStatHoy').addEventListener('click', ()=>{ pedidosStatRef = new Date(); renderDashPedidosStat(); });
+}
+DASH_RENDERERS.pedidos = renderDashPedidosStat;
+
+/* ================= DASHBOARD: 7. COBROS ================= */
+let cobrosDesde = '';
+let cobrosHasta = '';
+
+function pedidosEnRangoOpcional(desdeStr, hastaStr){
+  return state.pedidos.filter(p=>{
+    if(!p.fechaEntrega) return false;
+    if(desdeStr && p.fechaEntrega < desdeStr) return false;
+    if(hastaStr && p.fechaEntrega > hastaStr) return false;
+    return true;
+  });
+}
+
+function filaPedidoCobro(p){
+  return `<tr data-id="${p.id}"><td>${escHTML(p.clienta||'—')}</td><td>${escHTML(p.contacto||'—')}</td><td>${formatDate(p.fechaEntrega)}</td><td class="num">${money(pedidoSaldo(p))}</td></tr>`;
+}
+function tablaPedidosCobro(lista){
+  if(lista.length === 0) return '<p style="color:var(--soft);font-size:13px">Ninguno.</p>';
+  return `<div class="table-wrap" style="margin-bottom:20px"><table>
+    <thead><tr><th>Clienta</th><th>Contacto</th><th>Entrega</th><th style="text-align:right">Saldo</th></tr></thead>
+    <tbody>${lista.map(filaPedidoCobro).join('')}</tbody>
+  </table></div>`;
+}
+
+function renderDashCobros(){
+  const wrap = document.getElementById('dash-cobros');
+  const base = pedidosEnRangoOpcional(cobrosDesde, cobrosHasta);
+
+  const senasPendientes = base.filter(p=> p.estado === 'pendiente_sena');
+  const saldosPendientes = base.filter(p=> pedidoSaldo(p) > 0.009);
+  const entregadosSinCobrar = base.filter(p=> p.estado === 'entregado' && pedidoSaldo(p) > 0.009);
+  const totalPendiente = saldosPendientes.reduce((s,p)=> s + pedidoSaldo(p), 0);
+
+  wrap.innerHTML = `
+    <div class="filters">
+      <div class="field" style="margin-bottom:0"><label>Desde</label><input type="date" id="cobrosDesdeInput" value="${cobrosDesde}"></div>
+      <div class="field" style="margin-bottom:0"><label>Hasta</label><input type="date" id="cobrosHastaInput" value="${cobrosHasta}"></div>
+      <button class="btn btn-sm btn-ghost" id="cobrosLimpiar" type="button" style="margin-top:20px">Quitar filtro</button>
+    </div>
+    <div class="kpi-grid" style="margin-top:20px">
+      <div class="kpi-card"><div class="kpi-label">Señas pendientes</div><div class="kpi-value">${senasPendientes.length}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Con saldo pendiente</div><div class="kpi-value">${saldosPendientes.length}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Entregados sin cobrar</div><div class="kpi-value">${entregadosSinCobrar.length}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total pendiente de cobrar</div><div class="kpi-value accent">${money(totalPendiente)}</div></div>
+    </div>
+    <h3 style="font-size:15px;margin:22px 0 10px">Señas pendientes</h3>
+    ${tablaPedidosCobro(senasPendientes)}
+    <h3 style="font-size:15px;margin:22px 0 10px">Saldos pendientes</h3>
+    ${tablaPedidosCobro(saldosPendientes)}
+    <h3 style="font-size:15px;margin:22px 0 10px">Entregados sin cobrar</h3>
+    ${tablaPedidosCobro(entregadosSinCobrar)}
+    <p style="font-size:12px;color:var(--soft);margin-top:6px">Hacé clic en un pedido para abrirlo y registrar un pago.</p>
+  `;
+
+  document.getElementById('cobrosDesdeInput').addEventListener('change', e=>{ cobrosDesde = e.target.value; renderDashCobros(); });
+  document.getElementById('cobrosHastaInput').addEventListener('change', e=>{ cobrosHasta = e.target.value; renderDashCobros(); });
+  document.getElementById('cobrosLimpiar').addEventListener('click', ()=>{ cobrosDesde=''; cobrosHasta=''; renderDashCobros(); });
+
+  wrap.querySelectorAll('tbody tr[data-id]').forEach(tr=>{
+    tr.style.cursor = 'pointer';
+    tr.addEventListener('click', ()=> openPedidoForm(tr.dataset.id));
+  });
+}
+DASH_RENDERERS.cobros = renderDashCobros;
+
+/* ================= DASHBOARD: 8. PROYECCIÓN ================= */
+function renderDashProyeccion(){
+  const wrap = document.getElementById('dash-proyeccion');
+  const hoy = new Date();
+  const inicioMesActual = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  const acc = {};
+  state.pedidos.forEach(p=>{
+    if(!p.fechaEntrega) return;
+    const d = new Date(p.fechaEntrega + 'T00:00:00');
+    if(d < inicioMesActual) return;
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if(!acc[key]) acc[key] = { label: mesLabel(new Date(d.getFullYear(), d.getMonth(), 1)), total:0, cantidad:0 };
+    acc[key].total += pedidoTotalFinal(p);
+    acc[key].cantidad += 1;
+  });
+  const meses = Object.keys(acc).sort().slice(0,12).map(k=> acc[k]);
+  const barras = meses.map(m=>({label:m.label, value:m.total}));
+
+  wrap.innerHTML = `
+    <p style="color:var(--soft);font-size:13px;margin:0 0 16px">Facturación de los pedidos ya agendados, mes a mes, a partir de hoy.</p>
+    <div class="chart-card">
+      <h3>Facturación proyectada</h3>
+      ${meses.length ? barListHTML(barras, {colorVar:'var(--rosa)', formatValue: money}) : '<p style="color:var(--soft);font-size:13px">No hay pedidos agendados a futuro.</p>'}
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Mes</th><th style="text-align:right">Pedidos</th><th style="text-align:right">Facturación confirmada</th></tr></thead>
+        <tbody>${meses.map(m=>`<tr><td>${escHTML(m.label)}</td><td class="num">${m.cantidad}</td><td class="num">${money(m.total)}</td></tr>`).join('')}</tbody>
+      </table>
+    </div>
+  `;
+}
+DASH_RENDERERS.proyeccion = renderDashProyeccion;
+
+/* ================= DASHBOARD: 9. REPORTES (PDF) ================= */
+function reporteResumenSemanalHTML(){
+  const hoy = new Date();
+  const {desde, hasta} = rangoSemana(hoy);
+  const stats = statsPeriodo(pedidosEnRango(desde, hasta));
+  return printHeaderHTML('Resumen semanal', weekRangeLabel(hoy)) + `
+    <div class="nota-pagos">
+      <div><div class="nota-label">Facturación</div><div class="nota-value">${money(stats.facturacion)}</div></div>
+      <div><div class="nota-label">Pedidos</div><div class="nota-value">${stats.cantidad}</div></div>
+      <div><div class="nota-label">Ticket promedio</div><div class="nota-value">${money(stats.ticketPromedio)}</div></div>
+      <div><div class="nota-label">Cobrado</div><div class="nota-value">${money(stats.cobrado)}</div></div>
+      <div><div class="nota-label">Señas cobradas</div><div class="nota-value">${money(stats.senaCobrada)}</div></div>
+      <div><div class="nota-label">Saldo pendiente</div><div class="nota-value saldo">${money(stats.saldoPendiente)}</div></div>
+    </div>
+  `;
+}
+function reporteResumenMensualHTML(){
+  const hoy = new Date();
+  const {desde, hasta} = rangoMes(hoy);
+  const stats = statsPeriodo(pedidosEnRango(desde, hasta));
+  return printHeaderHTML('Resumen mensual', mesLabel(hoy)) + `
+    <div class="nota-pagos">
+      <div><div class="nota-label">Facturación</div><div class="nota-value">${money(stats.facturacion)}</div></div>
+      <div><div class="nota-label">Pedidos</div><div class="nota-value">${stats.cantidad}</div></div>
+      <div><div class="nota-label">Ticket promedio</div><div class="nota-value">${money(stats.ticketPromedio)}</div></div>
+      <div><div class="nota-label">Cobrado</div><div class="nota-value">${money(stats.cobrado)}</div></div>
+      <div><div class="nota-label">Señas cobradas</div><div class="nota-value">${money(stats.senaCobrada)}</div></div>
+      <div><div class="nota-label">Saldo pendiente</div><div class="nota-value saldo">${money(stats.saldoPendiente)}</div></div>
+    </div>
+  `;
+}
+function reporteBalanceHTML(){
+  const hoy = new Date();
+  const {desde, hasta} = rangoMes(hoy);
+  const pedidosPeriodo = pedidosEnRango(desde, hasta);
+  const ingresos = pedidosPeriodo.reduce((s,p)=> s + pedidoPagado(p), 0);
+  const egresos = egresosTotal(egresosEnRango(desde, hasta));
+  const ganancia = ingresos - egresos;
+  return printHeaderHTML('Balance mensual', mesLabel(hoy)) + `
+    <div class="nota-pagos">
+      <div><div class="nota-label">Ingresos</div><div class="nota-value">${money(ingresos)}</div></div>
+      <div><div class="nota-label">Egresos</div><div class="nota-value">${money(egresos)}</div></div>
+      <div><div class="nota-label">Ganancia estimada</div><div class="nota-value" style="color:${ganancia>=0?'#7a9a5f':'#C97F9C'}">${money(ganancia)}</div></div>
+    </div>
+  `;
+}
+function reporteListaPedidosHTML(){
+  const hoy = new Date();
+  const {desde, hasta} = rangoMes(hoy);
+  const lista = pedidosEnRango(desde, hasta).sort((a,b)=> (a.fechaEntrega||'').localeCompare(b.fechaEntrega||''));
+  const filas = lista.map(p=> `<tr><td>${escHTML(p.clienta||'—')}</td><td>${formatDate(p.fechaEntrega)}</td><td>${estadoInfo(p.estado).label}</td><td class="num">${money(pedidoTotalFinal(p))}</td><td class="num">${money(pedidoSaldo(p))}</td></tr>`).join('');
+  return printHeaderHTML('Lista de pedidos', mesLabel(hoy)) + `
+    <table class="nota-tabla">
+      <thead><tr><th>Clienta</th><th>Entrega</th><th>Estado</th><th class="num">Total</th><th class="num">Saldo</th></tr></thead>
+      <tbody>${filas || '<tr><td colspan="5" style="color:var(--soft)">Sin pedidos este mes.</td></tr>'}</tbody>
+    </table>
+  `;
+}
+function reporteListaEgresosHTML(){
+  const hoy = new Date();
+  const {desde, hasta} = rangoMes(hoy);
+  const lista = egresosEnRango(desde, hasta).sort((a,b)=> (a.fecha||'').localeCompare(b.fecha||''));
+  const filas = lista.map(e=> `<tr><td>${formatDate(e.fecha)}</td><td>${escHTML(e.categoria||'—')}</td><td>${escHTML(e.descripcion||'—')}</td><td class="num">${money(e.monto)}</td></tr>`).join('');
+  return printHeaderHTML('Lista de egresos', mesLabel(hoy)) + `
+    <table class="nota-tabla">
+      <thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th class="num">Monto</th></tr></thead>
+      <tbody>${filas || '<tr><td colspan="4" style="color:var(--soft)">Sin egresos este mes.</td></tr>'}</tbody>
+      <tfoot><tr><td colspan="3">Total</td><td class="num">${money(egresosTotal(lista))}</td></tr></tfoot>
+    </table>
+  `;
+}
+function reporteEstadisticasProductosHTML(){
+  const hoy = new Date();
+  const {desde, hasta} = rangoMes(hoy);
+  const stats = estadisticasProductos(pedidosEnRango(desde, hasta));
+  const filas = stats.map(p=> `<tr><td>${escHTML(p.nombre)}</td><td>${escHTML(p.categoria)}</td><td class="num">${p.cantidad}</td><td class="num">${money(p.facturacion)}</td></tr>`).join('');
+  return printHeaderHTML('Estadísticas de productos', mesLabel(hoy)) + `
+    <table class="nota-tabla">
+      <thead><tr><th>Producto</th><th>Categoría</th><th class="num">Cantidad</th><th class="num">Facturación</th></tr></thead>
+      <tbody>${filas || '<tr><td colspan="4" style="color:var(--soft)">Sin datos este mes.</td></tr>'}</tbody>
+    </table>
+  `;
+}
+function reporteEstadisticasTematicasHTML(){
+  const hoy = new Date();
+  const {desde, hasta} = rangoMes(hoy);
+  const stats = estadisticasTematicas(pedidosEnRango(desde, hasta));
+  const filas = stats.map(t=> `<tr><td>${escHTML(t.nombre)}</td><td class="num">${t.pedidos}</td><td class="num">${t.productos}</td><td class="num">${money(t.facturacion)}</td></tr>`).join('');
+  return printHeaderHTML('Estadísticas de temáticas', mesLabel(hoy)) + `
+    <table class="nota-tabla">
+      <thead><tr><th>Temática</th><th class="num">Pedidos</th><th class="num">Productos</th><th class="num">Facturación</th></tr></thead>
+      <tbody>${filas || '<tr><td colspan="4" style="color:var(--soft)">Sin datos este mes.</td></tr>'}</tbody>
+    </table>
+  `;
+}
+
+function renderDashReportes(){
+  const wrap = document.getElementById('dash-reportes');
+  wrap.innerHTML = `
+    <div class="export-cards">
+      <div class="export-card"><h3>Resumen semanal</h3><p>Facturación, pedidos y cobros de esta semana.</p><button class="btn" id="repSemanal">Generar PDF</button></div>
+      <div class="export-card"><h3>Resumen mensual</h3><p>Facturación, pedidos y cobros de este mes.</p><button class="btn" id="repMensual">Generar PDF</button></div>
+      <div class="export-card"><h3>Balance</h3><p>Ingresos, egresos y ganancia estimada de este mes.</p><button class="btn" id="repBalance">Generar PDF</button></div>
+      <div class="export-card"><h3>Lista de pedidos</h3><p>Todos los pedidos con entrega este mes.</p><button class="btn" id="repPedidos">Generar PDF</button></div>
+      <div class="export-card"><h3>Lista de egresos</h3><p>Todos los egresos cargados este mes.</p><button class="btn" id="repEgresos">Generar PDF</button></div>
+      <div class="export-card"><h3>Estadísticas de productos</h3><p>Ranking de productos vendidos este mes.</p><button class="btn" id="repProductos">Generar PDF</button></div>
+      <div class="export-card"><h3>Estadísticas de temáticas</h3><p>Ranking de temáticas pedidas este mes.</p><button class="btn" id="repTematicas">Generar PDF</button></div>
+    </div>
+    <p class="backup-note">Se abre el diálogo de impresión: elegí "Guardar como PDF" o imprimí directo.</p>
+  `;
+  document.getElementById('repSemanal').addEventListener('click', ()=> lanzarImpresion(reporteResumenSemanalHTML()));
+  document.getElementById('repMensual').addEventListener('click', ()=> lanzarImpresion(reporteResumenMensualHTML()));
+  document.getElementById('repBalance').addEventListener('click', ()=> lanzarImpresion(reporteBalanceHTML()));
+  document.getElementById('repPedidos').addEventListener('click', ()=> lanzarImpresion(reporteListaPedidosHTML()));
+  document.getElementById('repEgresos').addEventListener('click', ()=> lanzarImpresion(reporteListaEgresosHTML()));
+  document.getElementById('repProductos').addEventListener('click', ()=> lanzarImpresion(reporteEstadisticasProductosHTML()));
+  document.getElementById('repTematicas').addEventListener('click', ()=> lanzarImpresion(reporteEstadisticasTematicasHTML()));
+}
+DASH_RENDERERS.reportes = renderDashReportes;
+
+/* ================= MODAL: genérico ================= */
+const overlay = document.getElementById('overlay');
+const modal = document.getElementById('modal');
+function openModal(html){ modal.innerHTML = html; overlay.classList.add('open'); }
+function closeModal(){ overlay.classList.remove('open'); modal.innerHTML = ''; }
+overlay.addEventListener('click', e=>{ if(e.target === overlay) closeModal(); });
+
+/* ================= FORM: PRODUCTO ================= */
+function openProductoForm(id){
+  const isNew = !id;
+  const original = isNew ? {id:uid(), categoria:CATEGORIAS[0], nombre:'', descripcion:'', unidad:'unidad', precio:0, minimo:'', notas:''} : catalogoById(id);
+  const draft = JSON.parse(JSON.stringify(original));
+
+  openModal(`
+    <div class="modal-head">
+      <h2>${isNew ? 'Nuevo producto' : 'Editar producto'}</h2>
+      <button class="modal-close" id="mClose">&times;</button>
+    </div>
+    <div class="field">
+      <label>Nombre del producto</label>
+      <input id="f_nombre" value="${escAttr(draft.nombre)}" placeholder="Ej: Milkbox 3D">
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>Categoría</label>
+        <input id="f_categoria" list="dl_categorias" value="${escAttr(draft.categoria)}">
+        <datalist id="dl_categorias">${CATEGORIAS.map(c=>`<option value="${escAttr(c)}">`).join('')}</datalist>
+      </div>
+      <div class="field">
+        <label>Unidad de venta</label>
+        <input id="f_unidad" list="dl_unidades" value="${escAttr(draft.unidad)}" placeholder="unidad, pack x10, letra…">
+        <datalist id="dl_unidades">${UNIDADES_SUGERIDAS.map(u=>`<option value="${escAttr(u)}">`).join('')}</datalist>
+      </div>
+    </div>
+    <div class="field">
+      <label>Descripción breve</label>
+      <input id="f_descripcion" value="${escAttr(draft.descripcion)}" placeholder="Medidas, técnica, detalles…">
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>Precio unitario</label>
+        <input id="f_precio" type="number" min="0" step="1" value="${draft.precio}">
+      </div>
+      <div class="field">
+        <label>Mínimo de unidades (si aplica)</label>
+        <input id="f_minimo" value="${escAttr(draft.minimo)}" placeholder="Ej: 10 letras">
+      </div>
+    </div>
+    <div class="field">
+      <label>Notas internas</label>
+      <textarea id="f_notas" rows="2">${escHTML(draft.notas||'')}</textarea>
+    </div>
+    <div class="modal-actions">
+      <div>${isNew ? '' : '<button class="btn btn-danger" id="mDelete">Eliminar producto</button>'}</div>
+      <div class="right">
+        <button class="btn btn-ghost" id="mCancel">Cancelar</button>
+        <button class="btn btn-primary" id="mSave">Guardar</button>
+      </div>
+    </div>
+  `);
+
+  document.getElementById('mClose').onclick = closeModal;
+  document.getElementById('mCancel').onclick = closeModal;
+  if(!isNew){
+    document.getElementById('mDelete').onclick = ()=>{
+      if(confirm('¿Eliminar este producto del catálogo? Los pedidos que ya lo usaron no se modifican.')){
+        state.catalogo = state.catalogo.filter(p=>p.id !== id);
+        save(); closeModal(); renderCatalogo();
+      }
+    };
+  }
+  document.getElementById('mSave').onclick = ()=>{
+    const nombre = document.getElementById('f_nombre').value.trim();
+    if(!nombre){ alert('Ponele un nombre al producto.'); return; }
+    const nuevo = {
+      id: draft.id,
+      nombre,
+      categoria: document.getElementById('f_categoria').value.trim() || 'Sin categoría',
+      unidad: document.getElementById('f_unidad').value.trim() || 'unidad',
+      descripcion: document.getElementById('f_descripcion').value.trim(),
+      precio: Number(document.getElementById('f_precio').value) || 0,
+      minimo: document.getElementById('f_minimo').value.trim(),
+      notas: document.getElementById('f_notas').value.trim()
+    };
+    if(isNew){ state.catalogo.push(nuevo); }
+    else{ const idx = state.catalogo.findIndex(p=>p.id===id); state.catalogo[idx] = nuevo; }
+    save(); closeModal(); renderCatalogo();
+  };
+}
+function escAttr(s){ return escHTML(s===undefined||s===null?'':s); }
+
+/* ================= FORM: PEDIDO ================= */
+function openPedidoForm(id){
+  const isNew = !id;
+  const original = isNew ? {
+    id:uid(), clienta:'', contacto:'', fechaPedido:todayISO(), fechaCumple:'', fechaEntrega:'',
+    tematica:'', nombreCumple:'', edadCumple:'',
+    items:[], descuentos:[], pagos:[], notas:'', formaPago:'', estado:'pendiente_sena'
+  } : state.pedidos.find(p=>p.id===id);
+
+  let draft = JSON.parse(JSON.stringify(original));
+  if(!draft.descuentos) draft.descuentos = [];
+
+  function render(){
+    openModal(`
+      <div class="modal-head">
+        <h2>${isNew ? 'Nuevo pedido' : 'Editar pedido'}</h2>
+        <button class="modal-close" id="mClose">&times;</button>
+      </div>
+
+      <fieldset>
+        <legend>Datos generales</legend>
+        <div class="grid2">
+          <div class="field"><label>Clienta</label><input id="f_clienta" value="${escAttr(draft.clienta)}" placeholder="Nombre de la clienta"></div>
+          <div class="field"><label>Contacto (IG / WhatsApp)</label><input id="f_contacto" value="${escAttr(draft.contacto)}" placeholder="@usuario o número"></div>
+        </div>
+        <div class="grid3">
+          <div class="field"><label>Fecha de pedido</label><input id="f_fechaPedido" type="date" value="${draft.fechaPedido||''}"></div>
+          <div class="field"><label>Fecha de cumpleaños</label><input id="f_fechaCumple" type="date" value="${draft.fechaCumple||''}"></div>
+          <div class="field"><label>Fecha de entrega</label><input id="f_fechaEntrega" type="date" value="${draft.fechaEntrega||''}"></div>
+        </div>
+        <div class="grid3">
+          <div class="field"><label>Temática</label><input id="f_tematica" value="${escAttr(draft.tematica)}" placeholder="Ej: Dinosaurios"></div>
+          <div class="field"><label>Nombre del cumpleañero/a</label><input id="f_nombreCumple" value="${escAttr(draft.nombreCumple)}"></div>
+          <div class="field"><label>Edad que cumple</label><input id="f_edadCumple" value="${escAttr(draft.edadCumple)}" placeholder="Ej: 5"></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Productos</legend>
+        <div id="itemsWrap"></div>
+        <button class="btn btn-sm" id="btnAddItem" type="button">+ Agregar producto</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Descuentos</legend>
+        <div id="descuentosWrap"></div>
+        <button class="btn btn-sm" id="btnAddDescuento" type="button">+ Agregar descuento</button>
+      </fieldset>
+
+      <div class="resumen-box" id="resumenBox"></div>
+
+      <fieldset>
+        <legend>Pagos</legend>
+        <div id="pagosWrap"></div>
+        <button class="btn btn-sm" id="btnAddPago" type="button">+ Agregar pago</button>
+      </fieldset>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Estado del pedido</label>
+          <select id="f_estado">${ESTADOS.map(e=>`<option value="${e.id}" ${e.id===draft.estado?'selected':''}>${e.label}</option>`).join('')}</select>
+        </div>
+        <div class="field">
+          <label>Forma de pago</label>
+          <input id="f_formaPago" list="dl_formapago" value="${escAttr(draft.formaPago)}" placeholder="Efectivo, transferencia…">
+          <datalist id="dl_formapago">${FORMAS_PAGO_SUGERIDAS.map(f=>`<option value="${escAttr(f)}">`).join('')}</datalist>
+        </div>
+      </div>
+      <div class="field">
+        <label>Notas internas</label>
+        <textarea id="f_notas" rows="2">${escHTML(draft.notas||'')}</textarea>
+      </div>
+
+      <div class="modal-actions">
+        <div>${isNew ? '' : '<button class="btn" id="mPrint" type="button">Imprimir / PDF</button> <button class="btn btn-danger" id="mDelete">Eliminar pedido</button>'}</div>
+        <div class="right">
+          <button class="btn btn-ghost" id="mCancel">Cancelar</button>
+          <button class="btn btn-primary" id="mSave">Guardar</button>
+        </div>
+      </div>
+    `);
+
+    bindGeneralFields();
+    renderItems();
+    renderDescuentos();
+    renderPagos();
+    renderResumen();
+
+    document.getElementById('mClose').onclick = closeModal;
+    document.getElementById('mCancel').onclick = closeModal;
+    document.getElementById('btnAddItem').onclick = ()=>{
+      const primero = state.catalogo[0];
+      draft.items.push(primero ? {productoId:primero.id, nombre:primero.nombre, unidad:primero.unidad, precio:primero.precio, cantidad:1} : {productoId:'', nombre:'', unidad:'unidad', precio:0, cantidad:1});
+      renderItems(); renderResumen();
+    };
+    document.getElementById('btnAddPago').onclick = ()=>{
+      draft.pagos.push({fecha:todayISO(), monto:'', nota:''});
+      renderPagos(); renderResumen();
+    };
+    document.getElementById('btnAddDescuento').onclick = ()=>{
+      draft.descuentos.push({monto:'', motivo:''});
+      renderDescuentos(); renderResumen();
+    };
+    if(!isNew){
+      document.getElementById('mDelete').onclick = ()=>{
+        if(confirm('¿Eliminar este pedido? Esta acción no se puede deshacer.')){
+          state.pedidos = state.pedidos.filter(p=>p.id !== id);
+          save(); closeModal(); renderPedidos();
+          eliminarAgendaEspejo(id);
+        }
+      };
+      document.getElementById('mPrint').onclick = ()=>{
+        lanzarImpresion(printHeaderHTML('Nota de pedido', draft.clienta) + pedidoNotaHTML(draft));
+      };
+    }
+    document.getElementById('mSave').onclick = guardarPedido;
+  }
+
+  function bindGeneralFields(){
+    const ids = ['clienta','contacto','fechaPedido','fechaCumple','fechaEntrega','tematica','nombreCumple','edadCumple','estado','formaPago','notas'];
+    ids.forEach(k=>{
+      document.getElementById('f_'+k).addEventListener('input', e=>{ draft[k] = e.target.value; });
+    });
+  }
+
+  function renderItems(){
+    const wrap = document.getElementById('itemsWrap');
+    if(draft.items.length === 0){
+      wrap.innerHTML = '<p style="color:var(--soft);font-size:13px;margin:4px 0 12px">Todavía no agregaste productos.</p>';
+      return;
+    }
+    wrap.innerHTML = draft.items.map((it, idx)=>{
+      const esOtro = it.productoId === '__otros__';
+      const prod = catalogoById(it.productoId);
+      const min = (!esOtro && prod && prod.minimo) ? `<div class="hint">Mínimo sugerido: ${escHTML(String(prod.minimo))}</div>` : '';
+      const nombreOtroInput = esOtro ? `<input class="it_nombre_otro" type="text" value="${escAttr(it.nombre)}" placeholder="Nombre del producto" style="margin-top:6px">` : '';
+      const precioCol = esOtro
+        ? `<input class="it_precio_otro" type="number" min="0" step="1" value="${it.precio}" placeholder="Precio" title="Precio unitario">`
+        : `<div style="font-size:13px;color:var(--soft);text-align:right">${money(it.precio)} / ${escHTML(it.unidad||'unidad')}</div>`;
+      return `
+      <div class="item-row" data-idx="${idx}">
+        <div>
+          <select class="it_producto">
+            <option value="__otros__" ${esOtro?'selected':''}>OTROS (no está en el catálogo)</option>
+            ${state.catalogo.map(p=>`<option value="${p.id}" ${p.id===it.productoId?'selected':''}>${escHTML(p.nombre)} (${escHTML(p.categoria)})</option>`).join('')}
+          </select>
+          ${min}${nombreOtroInput}
+        </div>
+        <input class="it_cantidad" type="number" min="1" step="1" value="${it.cantidad}" title="Cantidad">
+        ${precioCol}
+        <div class="it_subtotal" style="font-weight:700;text-align:right">${money((Number(it.precio)||0)*(Number(it.cantidad)||0))}</div>
+        <button class="mini-remove" type="button" title="Quitar">&times;</button>
+      </div>`;
+    }).join('');
+
+    wrap.querySelectorAll('.item-row').forEach(row=>{
+      const idx = Number(row.dataset.idx);
+      row.querySelector('.it_producto').addEventListener('change', e=>{
+        const val = e.target.value;
+        if(val === '__otros__'){
+          draft.items[idx].productoId = '__otros__';
+          draft.items[idx].nombre = '';
+          draft.items[idx].unidad = 'unidad';
+          draft.items[idx].precio = 0;
+        }else{
+          const prod = catalogoById(val);
+          if(prod){
+            draft.items[idx].productoId = prod.id;
+            draft.items[idx].nombre = prod.nombre;
+            draft.items[idx].unidad = prod.unidad;
+            draft.items[idx].precio = prod.precio;
+          }
+        }
+        renderItems(); renderResumen();
+      });
+      row.querySelector('.it_cantidad').addEventListener('input', e=>{
+        draft.items[idx].cantidad = Number(e.target.value) || 0;
+        const subtotalEl = row.querySelector('.it_subtotal');
+        if(subtotalEl) subtotalEl.textContent = money((Number(draft.items[idx].precio)||0) * (Number(draft.items[idx].cantidad)||0));
+        renderResumen();
+      });
+      const nombreOtro = row.querySelector('.it_nombre_otro');
+      if(nombreOtro){
+        nombreOtro.addEventListener('input', e=>{ draft.items[idx].nombre = e.target.value; });
+      }
+      const precioOtro = row.querySelector('.it_precio_otro');
+      if(precioOtro){
+        precioOtro.addEventListener('input', e=>{
+          draft.items[idx].precio = Number(e.target.value) || 0;
+          const subtotalEl = row.querySelector('.it_subtotal');
+          if(subtotalEl) subtotalEl.textContent = money((Number(draft.items[idx].precio)||0) * (Number(draft.items[idx].cantidad)||0));
+          renderResumen();
+        });
+      }
+      row.querySelector('.mini-remove').addEventListener('click', ()=>{
+        draft.items.splice(idx,1);
+        renderItems(); renderResumen();
+      });
+    });
+  }
+
+  function renderPagos(){
+    const wrap = document.getElementById('pagosWrap');
+    if(draft.pagos.length === 0){
+      wrap.innerHTML = '<p style="color:var(--soft);font-size:13px;margin:4px 0 12px">Todavía no se registraron pagos.</p>';
+      return;
+    }
+    wrap.innerHTML = draft.pagos.map((pg, idx)=>`
+      <div class="pago-row" data-idx="${idx}">
+        <input class="pg_fecha" type="date" value="${pg.fecha||''}">
+        <input class="pg_monto" type="number" min="0" step="1" value="${pg.monto}" placeholder="Monto">
+        <input class="pg_nota" type="text" value="${escAttr(pg.nota)}" placeholder="Ej: seña, saldo final…">
+        <button class="mini-remove" type="button" title="Quitar">&times;</button>
+      </div>
+    `).join('');
+
+    wrap.querySelectorAll('.pago-row').forEach(row=>{
+      const idx = Number(row.dataset.idx);
+      row.querySelector('.pg_fecha').addEventListener('input', e=>{ draft.pagos[idx].fecha = e.target.value; });
+      row.querySelector('.pg_monto').addEventListener('input', e=>{ draft.pagos[idx].monto = Number(e.target.value)||0; renderResumen(); });
+      row.querySelector('.pg_nota').addEventListener('input', e=>{ draft.pagos[idx].nota = e.target.value; });
+      row.querySelector('.mini-remove').addEventListener('click', ()=>{ draft.pagos.splice(idx,1); renderPagos(); renderResumen(); });
+    });
+  }
+
+  function renderDescuentos(){
+    const wrap = document.getElementById('descuentosWrap');
+    if(draft.descuentos.length === 0){
+      wrap.innerHTML = '<p style="color:var(--soft);font-size:13px;margin:4px 0 12px">Sin descuentos en este pedido.</p>';
+      return;
+    }
+    wrap.innerHTML = draft.descuentos.map((d, idx)=>`
+      <div class="descuento-row" data-idx="${idx}">
+        <input class="dc_monto" type="number" min="0" step="1" value="${d.monto}" placeholder="Monto">
+        <input class="dc_motivo" type="text" value="${escAttr(d.motivo)}" placeholder="Motivo (opcional, ej: descuento acordado)">
+        <button class="mini-remove" type="button" title="Quitar">&times;</button>
+      </div>
+    `).join('');
+
+    wrap.querySelectorAll('.descuento-row').forEach(row=>{
+      const idx = Number(row.dataset.idx);
+      row.querySelector('.dc_monto').addEventListener('input', e=>{ draft.descuentos[idx].monto = Number(e.target.value)||0; renderResumen(); });
+      row.querySelector('.dc_motivo').addEventListener('input', e=>{ draft.descuentos[idx].motivo = e.target.value; });
+      row.querySelector('.mini-remove').addEventListener('click', ()=>{ draft.descuentos.splice(idx,1); renderDescuentos(); renderResumen(); });
+    });
+  }
+
+  function renderResumen(){
+    const subtotal = pedidoTotal(draft);
+    const descuento = pedidoDescuento(draft);
+    const total = pedidoTotalFinal(draft);
+    const sena = pedidoSenaSugerida(draft);
+    const pagado = pedidoPagado(draft);
+    const saldo = total - pagado;
+    const filasDescuento = descuento > 0 ? `
+      <div class="label">Subtotal productos</div><div class="val">${money(subtotal)}</div>
+      <div class="label">Descuento</div><div class="val" style="color:#C97F9C">-${money(descuento)}</div>
+    ` : '';
+    document.getElementById('resumenBox').innerHTML = `
+      ${filasDescuento}
+      <div class="label">Total del pedido</div><div class="val" style="font-size:17px">${money(total)}</div>
+      <div class="label">Seña sugerida (50%)</div><div class="val">${money(sena)}</div>
+      <div class="label">Total pagado</div><div class="val">${money(pagado)}</div>
+      <div class="label">Saldo pendiente</div><div class="val" style="color:${saldo>0.009?'#C97F9C':'#7a9a5f'}">${money(saldo)}</div>
+    `;
+  }
+
+  function guardarPedido(){
+    if(!draft.clienta || !draft.clienta.trim()){ alert('Ponele el nombre de la clienta.'); return; }
+    const otroSinNombre = draft.items.some(it => it.productoId === '__otros__' && !(it.nombre||'').trim());
+    if(otroSinNombre){ alert('Completá el nombre de los productos "OTROS" antes de guardar.'); return; }
+    if(isNew){ state.pedidos.push(draft); }
+    else{ const idx = state.pedidos.findIndex(p=>p.id===id); state.pedidos[idx] = draft; }
+    save(); closeModal(); renderPedidos();
+    sincronizarAgendaEspejo(draft);
+  }
+
+  render();
+}
+
+/* ================= BOTONES PRINCIPALES ================= */
+document.getElementById('btnNuevoPedido').addEventListener('click', ()=> openPedidoForm(null));
+document.getElementById('btnNuevoProducto').addEventListener('click', ()=> openProductoForm(null));
+
+/* ================= COPIA DE SEGURIDAD ================= */
+document.getElementById('btnBackupDown').addEventListener('click', ()=>{
+  const content = JSON.stringify(state, null, 2);
+  downloadFile(`pedidos-loli-backup-${todayISO()}.json`, content, 'application/json');
+});
+const fileRestore = document.getElementById('fileRestore');
+document.getElementById('btnBackupUp').addEventListener('click', ()=> fileRestore.click());
+fileRestore.addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result);
+      if(!parsed.catalogo || !parsed.pedidos) throw new Error('Archivo inválido');
+      if(!parsed.egresos) parsed.egresos = [];
+      if(confirm('Esto va a reemplazar todo lo que tenés cargado ahora por lo que está en la copia de seguridad. ¿Continuar?')){
+        state = parsed;
+        save();
+        renderPedidos(); renderCatalogo(); renderProduccion(); renderDashboard();
+        alert('Copia de seguridad restaurada.');
+      }
+    }catch(err){
+      alert('No se pudo leer ese archivo como copia de seguridad de esta app.');
+    }
+    fileRestore.value = '';
+  };
+  reader.readAsText(file);
+});
+
+/* ================= EXPORTAR ================= */
+function itemsResumen(p){
+  return (p.items||[]).map(it => `${it.nombre} x${it.cantidad}`).join(' | ');
+}
+
+/* ---- notas de pedido (impresión / PDF) ---- */
+function pagoSena(p){
+  const pagos = (p.pagos||[]).filter(pg => pg.fecha || pg.monto).slice().sort((a,b)=> (a.fecha||'').localeCompare(b.fecha||''));
+  if(pagos.length === 0) return null;
+  return pagos.find(pg => /se[nñ]a/i.test(pg.nota||'')) || pagos[0];
+}
+
+function printHeaderHTML(titulo, subtitulo){
+  return `
+    <div class="print-header">
+      <img src="assets/iso-rosa.png" alt="">
+      <div>
+        <div class="print-brand">El Mundo de Loli</div>
+        <div class="print-title">${escHTML(titulo)}${subtitulo ? ' · ' + escHTML(subtitulo) : ''}</div>
+      </div>
+    </div>
+  `;
+}
+
+function pedidoNotaHTML(p){
+  const est = estadoInfo(p.estado);
+  const subtotal = pedidoTotal(p);
+  const descuento = pedidoDescuento(p);
+  const total = pedidoTotalFinal(p);
+  const saldo = pedidoSaldo(p);
+  const sena = pagoSena(p);
+  const itemsHTML = (p.items||[]).length ? (p.items||[]).map(it => `
+      <tr>
+        <td>${escHTML(it.nombre)}</td>
+        <td class="num">${it.cantidad}</td>
+        <td class="num">${money(it.precio)}</td>
+        <td class="num">${money((Number(it.precio)||0) * (Number(it.cantidad)||0))}</td>
+      </tr>
+    `).join('') : `<tr><td colspan="4" style="color:var(--soft)">Sin productos cargados</td></tr>`;
+  const filasTotal = descuento > 0
+    ? `<tr><td colspan="3" style="font-family:Quicksand;font-weight:600">Subtotal</td><td class="num" style="font-family:Quicksand;font-weight:600">${money(subtotal)}</td></tr>
+       <tr><td colspan="3" style="font-family:Quicksand;font-weight:600">Descuento${p.descuentos && p.descuentos.length===1 && p.descuentos[0].motivo ? ' ('+escHTML(p.descuentos[0].motivo)+')' : ''}</td><td class="num" style="font-family:Quicksand;font-weight:600">-${money(descuento)}</td></tr>
+       <tr><td colspan="3">Total</td><td class="num">${money(total)}</td></tr>`
+    : `<tr><td colspan="3">Total</td><td class="num">${money(total)}</td></tr>`;
+
+  return `
+    <div class="nota-pedido">
+      <div class="nota-row-top">
+        <div><div class="nota-label">Clienta</div><div class="nota-value">${escHTML(p.clienta||'—')}</div></div>
+        <div><div class="nota-label">Contacto</div><div class="nota-value">${escHTML(p.contacto||'—')}</div></div>
+        <div><div class="nota-label">Fecha de entrega</div><div class="nota-value">${formatDate(p.fechaEntrega)}</div></div>
+      </div>
+      <div class="nota-row-top">
+        <div><div class="nota-label">Cumpleañero/a</div><div class="nota-value">${escHTML(p.nombreCumple||'—')}${p.edadCumple ? ` (${escHTML(p.edadCumple)} años)` : ''}</div></div>
+        <div><div class="nota-label">Temática</div><div class="nota-value">${escHTML(p.tematica||'—')}</div></div>
+        <div><div class="nota-label">Estado</div><div class="nota-value"><span class="badge" style="background:${est.bg};color:${est.color}">${est.label}</span></div></div>
+      </div>
+      <table class="nota-tabla">
+        <thead><tr><th>Producto</th><th class="num">Cant.</th><th class="num">Precio</th><th class="num">Subtotal</th></tr></thead>
+        <tbody>${itemsHTML}</tbody>
+        <tfoot>${filasTotal}</tfoot>
+      </table>
+      <div class="nota-pagos">
+        <div><div class="nota-label">Seña</div><div class="nota-value">${sena ? formatDate(sena.fecha) + ' — ' + money(sena.monto) : 'No registrada'}</div></div>
+        <div><div class="nota-label">Saldo pendiente</div><div class="nota-value saldo">${money(saldo)}</div></div>
+        <div><div class="nota-label">Forma de pago</div><div class="nota-value">${escHTML(p.formaPago||'—')}</div></div>
+      </div>
+    </div>
+  `;
+}
+
+function pedidoResumenInternoHTML(p){
+  const saldo = pedidoSaldo(p);
+  const productosHTML = (p.items||[]).length
+    ? (p.items||[]).map(it => `<li><b>${it.cantidad}x</b> ${escHTML(it.nombre)}</li>`).join('')
+    : '<li style="color:var(--soft)">Sin productos cargados</li>';
+  return `
+    <div class="nota-interna">
+      <div class="ni-top">
+        <div class="ni-clienta">${escHTML(p.clienta||'—')}</div>
+        <div class="ni-fecha">Entrega: ${formatDate(p.fechaEntrega)}</div>
+      </div>
+      <div class="ni-sub">
+        ${escHTML(p.nombreCumple||'—')}${p.edadCumple ? ` (${escHTML(p.edadCumple)} años)` : ''} · ${escHTML(p.tematica||'—')} · Cumple: ${formatDate(p.fechaCumple)}
+      </div>
+      <ul class="ni-productos">${productosHTML}</ul>
+      ${saldo > 0.009 ? `<div class="ni-saldo">Saldo pendiente: ${money(saldo)}</div>` : ''}
+    </div>
+  `;
+}
+
+function lanzarImpresion(html){
+  document.getElementById('printArea').innerHTML = html + '<div class="print-footer">gracias por dejarme ser parte de tu mundo ✿</div>';
+  window.print();
+}
+
+document.getElementById('btnExportTodos').addEventListener('click', ()=>{
+  const headers = ['Clienta','Contacto','Fecha pedido','Fecha cumpleaños','Fecha entrega','Temática','Cumpleañero/a','Edad','Productos','Subtotal','Descuento','Total','Pagado','Saldo','Estado','Forma de pago','Notas'];
+  const rows = state.pedidos.map(p=>[
+    p.clienta, p.contacto, formatDate(p.fechaPedido), formatDate(p.fechaCumple), formatDate(p.fechaEntrega),
+    p.tematica, p.nombreCumple, p.edadCumple, itemsResumen(p),
+    pedidoTotal(p), pedidoDescuento(p), pedidoTotalFinal(p), pedidoPagado(p), pedidoSaldo(p), estadoInfo(p.estado).label, p.formaPago, p.notas
+  ]);
+  downloadFile(`pedidos-${todayISO()}.csv`, toCSV(headers, rows), 'text/csv;charset=utf-8;');
+});
+
+document.getElementById('btnExportSaldo').addEventListener('click', ()=>{
+  const headers = ['Clienta','Contacto','Fecha entrega','Total','Pagado','Saldo','Estado'];
+  const rows = state.pedidos.filter(p=>pedidoSaldo(p)>0.009).map(p=>[
+    p.clienta, p.contacto, formatDate(p.fechaEntrega), pedidoTotalFinal(p), pedidoPagado(p), pedidoSaldo(p), estadoInfo(p.estado).label
+  ]);
+  downloadFile(`pedidos-saldo-pendiente-${todayISO()}.csv`, toCSV(headers, rows), 'text/csv;charset=utf-8;');
+});
+
+document.getElementById('btnExportMensual').addEventListener('click', ()=>{
+  const meses = {};
+  state.pedidos.forEach(p=>{
+    const ref = p.fechaPedido || p.fechaEntrega;
+    if(!ref) return;
+    const mes = ref.slice(0,7);
+    if(!meses[mes]) meses[mes] = {cantidad:0, vendido:0, cobrado:0};
+    meses[mes].cantidad += 1;
+    meses[mes].vendido += pedidoTotalFinal(p);
+    meses[mes].cobrado += pedidoPagado(p);
+  });
+  const headers = ['Mes','Cantidad de pedidos','Total vendido','Total cobrado','Total pendiente'];
+  const rows = Object.keys(meses).sort().map(mes=>{
+    const m = meses[mes];
+    return [mes, m.cantidad, m.vendido, m.cobrado, m.vendido - m.cobrado];
+  });
+  downloadFile(`resumen-mensual-${todayISO()}.csv`, toCSV(headers, rows), 'text/csv;charset=utf-8;');
+});
+
+document.getElementById('btnExportSemana').addEventListener('click', ()=>{
+  const raw = document.getElementById('expWeekDate').value;
+  const ref = raw ? new Date(raw + 'T00:00:00') : new Date();
+  const rows = state.pedidos.filter(p => isInWeek(p.fechaEntrega, ref));
+  rows.sort((a,b)=> (a.fechaEntrega||'9999').localeCompare(b.fechaEntrega||'9999'));
+  if(rows.length === 0){ alert('No hay pedidos con fecha de entrega en esa semana.'); return; }
+  const html = printHeaderHTML('Pedidos de la semana (uso interno)', weekRangeLabel(ref)) + rows.map(pedidoResumenInternoHTML).join('');
+  lanzarImpresion(html);
+});
+
+/* ================= SUPABASE: config, login y espejo (celu-loli sync) ================= */
+const SUPABASE_URL = 'https://bucngdpeaqpskjjgpaqv.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1Y25nZHBlYXFwc2tqamdwYXF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0NjY1MjMsImV4cCI6MjEwMDA0MjUyM30.EaVF0UK4Ku0fePijz3zbiVl6IoMWe3H63jEDmtinqss';
+
+let supa = null;
+try{
+  if(window.supabase){ supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+}catch(e){ console.warn('Supabase no disponible, se sigue trabajando local.', e); }
+
+function mostrarApp(){ document.getElementById('loginOverlay').style.display = 'none'; }
+function mostrarLogin(){ document.getElementById('loginOverlay').style.display = 'flex'; }
+
+async function chequearSesion(){
+  if(!supa){ mostrarApp(); return; }
+  try{
+    const { data, error } = await supa.auth.getSession();
+    if(error) throw error;
+    if(data && data.session){ mostrarApp(); refrescarContadorCapturas(); }
+    else mostrarLogin();
+  }catch(e){
+    console.warn('No se pudo verificar la sesión (sin conexión?). Se permite el uso local sin sincronizar.', e);
+    mostrarApp();
+  }
+}
+
+async function hacerLogin(){
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  if(!supa){ errEl.textContent = 'No hay conexión con el servidor.'; return; }
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true; btn.textContent = 'Entrando…';
+  try{
+    const { error } = await supa.auth.signInWithPassword({ email, password });
+    if(error) throw error;
+    mostrarApp();
+    refrescarContadorCapturas();
+  }catch(e){
+    errEl.textContent = 'Email o contraseña incorrectos.';
+  }
+  btn.disabled = false; btn.textContent = 'Entrar';
+}
+document.getElementById('btnLogin').addEventListener('click', hacerLogin);
+document.getElementById('loginPassword').addEventListener('keydown', e=>{ if(e.key === 'Enter') hacerLogin(); });
+
+async function sincronizarAgendaEspejo(pedido){
+  if(!supa) return;
+  try{
+    await supa.from('agenda_espejo').upsert({
+      pedido_id: pedido.id,
+      clienta: pedido.clienta || '',
+      fecha_entrega: pedido.fechaEntrega || null,
+      estado: pedido.estado || '',
+      saldo: pedidoSaldo(pedido),
+      updated_at: new Date().toISOString()
+    });
+  }catch(e){
+    console.warn('No se pudo sincronizar con la agenda espejo (sin internet u otro error). El pedido sigue guardado localmente.', e);
+  }
+}
+async function eliminarAgendaEspejo(pedidoId){
+  if(!supa) return;
+  try{
+    await supa.from('agenda_espejo').delete().eq('pedido_id', pedidoId);
+  }catch(e){
+    console.warn('No se pudo eliminar de la agenda espejo.', e);
+  }
+}
+
+/* ================= SUPABASE: buzón de capturas del celu ================= */
+async function contarCapturasPendientes(){
+  if(!supa) return null;
+  try{
+    const { count, error } = await supa.from('buzon_capturas').select('*', { count: 'exact', head: true }).eq('procesado', false);
+    if(error) throw error;
+    return count || 0;
+  }catch(e){
+    console.warn('No se pudo consultar el buzón de capturas.', e);
+    return null;
+  }
+}
+async function refrescarContadorCapturas(){
+  const n = await contarCapturasPendientes();
+  const btn = document.getElementById('btnCapturas');
+  const badge = document.getElementById('capturasCount');
+  if(n === null){ btn.style.display = 'none'; return; }
+  btn.style.display = '';
+  if(n > 0){ badge.style.display = ''; badge.textContent = n; }
+  else{ badge.style.display = 'none'; }
+}
+async function marcarCapturaProcesada(capturaId){
+  if(!supa) return;
+  try{
+    await supa.from('buzon_capturas').update({ procesado: true }).eq('id', capturaId);
+  }catch(e){
+    console.warn('No se pudo marcar la captura como procesada.', e);
+  }
+  refrescarContadorCapturas();
+}
+
+function setInputValue(el, value){
+  if(!el) return;
+  el.value = (value === undefined || value === null) ? '' : value;
+  el.dispatchEvent(new Event('input', {bubbles:true}));
+}
+
+/* Estas dos funciones abren el modal con openPedidoForm() tal cual existe hoy,
+   y después completan los campos simulando tipeo/clicks reales, sin tocar
+   la lógica interna de openPedidoForm ni de guardarPedido. */
+function usarCapturaPedidoNuevo(captura){
+  const p = captura.payload || {};
+  openPedidoForm(null);
+  setInputValue(document.getElementById('f_clienta'), p.clienta);
+  setInputValue(document.getElementById('f_contacto'), p.contacto);
+  setInputValue(document.getElementById('f_fechaEntrega'), p.fechaEntrega);
+  setInputValue(document.getElementById('f_tematica'), p.detalle || p.tematica);
+  if(p.senaMonto){
+    document.getElementById('btnAddPago').click();
+    const filas = document.querySelectorAll('#pagosWrap .pago-row');
+    const ultima = filas[filas.length - 1];
+    if(ultima){
+      setInputValue(ultima.querySelector('.pg_fecha'), p.senaFecha || todayISO());
+      setInputValue(ultima.querySelector('.pg_monto'), p.senaMonto);
+      setInputValue(ultima.querySelector('.pg_nota'), 'Seña cargada desde el celu' + (p.senaFormaPago ? ' (' + p.senaFormaPago + ')' : ''));
+    }
+  }
+  vincularCierreConCaptura(captura.id);
+}
+function usarCapturaPago(captura){
+  const p = captura.payload || {};
+  if(!state.pedidos.find(x=>x.id===p.pedidoId)){
+    alert('El pedido de esta captura ya no existe en la app (puede haber sido borrado). Descartá la captura o cargá el pago manualmente.');
+    return;
+  }
+  openPedidoForm(p.pedidoId);
+  document.getElementById('btnAddPago').click();
+  const filas = document.querySelectorAll('#pagosWrap .pago-row');
+  const ultima = filas[filas.length - 1];
+  if(ultima){
+    setInputValue(ultima.querySelector('.pg_fecha'), p.fecha || todayISO());
+    setInputValue(ultima.querySelector('.pg_monto'), p.monto);
+    setInputValue(ultima.querySelector('.pg_nota'), p.nota || (p.formaPago ? 'Pago cargado desde el celu (' + p.formaPago + ')' : 'Pago cargado desde el celu'));
+  }
+  vincularCierreConCaptura(captura.id);
+}
+function vincularCierreConCaptura(capturaId){
+  const btnSave = document.getElementById('mSave');
+  if(!btnSave) return;
+  btnSave.addEventListener('click', ()=>{
+    setTimeout(()=>{ if(!overlay.classList.contains('open')) marcarCapturaProcesada(capturaId); }, 0);
+  });
+}
+
+function capturaResumenHTML(c){
+  const p = c.payload || {};
+  const fecha = new Date(c.creado_en).toLocaleString('es-AR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+  if(c.tipo === 'pago'){
+    return `
+      <div class="cc-top"><span class="cc-tipo">Pago</span><span style="font-size:12px;color:var(--soft)">${fecha}</span></div>
+      <div style="font-size:14.5px;margin-top:6px"><strong>${escHTML(p.clienta||'—')}</strong> — ${money(p.monto)}${p.formaPago ? ' · ' + escHTML(p.formaPago) : ''}</div>
+      ${p.nota ? `<div style="font-size:12.5px;color:var(--soft);margin-top:2px">${escHTML(p.nota)}</div>` : ''}
+    `;
+  }
+  return `
+    <div class="cc-top"><span class="cc-tipo">Pedido nuevo</span><span style="font-size:12px;color:var(--soft)">${fecha}</span></div>
+    <div style="font-size:14.5px;margin-top:6px"><strong>${escHTML(p.clienta||'—')}</strong>${p.contacto ? ' · ' + escHTML(p.contacto) : ''}</div>
+    <div style="font-size:12.5px;color:var(--soft);margin-top:2px">${p.fechaEntrega ? 'Entrega: ' + formatDate(p.fechaEntrega) + ' · ' : ''}${escHTML(p.detalle||p.tematica||'')}</div>
+    ${p.senaMonto ? `<div style="font-size:12.5px;color:var(--rosaD);margin-top:2px">Seña: ${money(p.senaMonto)}</div>` : ''}
+  `;
+}
+
+async function abrirBuzonCapturas(){
+  if(!supa){ alert('No hay conexión con el servidor. Probá de nuevo cuando tengas internet.'); return; }
+  const { data, error } = await supa.from('buzon_capturas').select('*').eq('procesado', false).order('creado_en', {ascending:true});
+  if(error){ alert('No se pudo conectar con el buzón de capturas. Revisá tu conexión a internet.'); return; }
+  const lista = data || [];
+  const filas = lista.length ? lista.map(c => `
+    <div class="captura-card" data-id="${c.id}">
+      ${capturaResumenHTML(c)}
+      <div class="cc-actions">
+        <button class="btn btn-sm btn-primary" data-accion="usar" type="button">Usar esta captura</button>
+        <button class="btn btn-sm btn-danger" data-accion="descartar" type="button">Descartar</button>
+      </div>
+    </div>
+  `).join('') : '<p style="color:var(--soft);font-size:13.5px">No hay capturas pendientes.</p>';
+
+  openModal(`
+    <div class="modal-head">
+      <h2>Capturas del celu</h2>
+      <button class="modal-close" id="mClose">&times;</button>
+    </div>
+    <div id="capturasLista">${filas}</div>
+    <div class="modal-actions"><div></div><div class="right"><button class="btn" id="mCancel" type="button">Cerrar</button></div></div>
+  `);
+  document.getElementById('mClose').onclick = closeModal;
+  document.getElementById('mCancel').onclick = closeModal;
+
+  document.querySelectorAll('#capturasLista .captura-card').forEach(card=>{
+    const id = card.dataset.id;
+    const captura = lista.find(c=>c.id===id);
+    card.querySelector('[data-accion="usar"]').addEventListener('click', ()=>{
+      closeModal();
+      if(captura.tipo === 'pago') usarCapturaPago(captura);
+      else usarCapturaPedidoNuevo(captura);
+    });
+    card.querySelector('[data-accion="descartar"]').addEventListener('click', async ()=>{
+      if(confirm('¿Descartar esta captura sin usarla?')){
+        await marcarCapturaProcesada(id);
+        abrirBuzonCapturas();
+      }
+    });
+  });
+}
+document.getElementById('btnCapturas').addEventListener('click', abrirBuzonCapturas);
+
+/* ================= INICIO ================= */
+document.getElementById('expWeekDate').value = todayISO();
+renderWeekNav();
+renderPedidos();
+renderCatalogo();
+renderProdWeekNav();
+renderProduccion();
+renderDashboard();
+chequearSesion();
+</script>
+</body>
+</html>
