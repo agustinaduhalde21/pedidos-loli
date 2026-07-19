@@ -250,6 +250,7 @@ legend{font-family:Fredoka;font-weight:600;font-size:14px;color:var(--ink);paddi
   </div>
   <div class="header-actions">
     <button class="btn" id="btnCapturas" type="button" style="display:none">Revisar capturas del celu<span class="badge-count" id="capturasCount" style="display:none">0</span></button>
+    <button class="btn" id="btnSyncTodo" type="button" style="display:none">Sincronizar todo con el celu</button>
     <button class="btn" id="btnBackupDown">Descargar copia de seguridad</button>
     <button class="btn" id="btnBackupUp">Restaurar copia de seguridad</button>
     <input type="file" id="fileRestore" accept="application/json">
@@ -2162,7 +2163,7 @@ async function chequearSesion(){
   try{
     const { data, error } = await supa.auth.getSession();
     if(error) throw error;
-    if(data && data.session){ mostrarApp(); refrescarContadorCapturas(); }
+    if(data && data.session){ mostrarApp(); refrescarContadorCapturas(); mostrarBotonSync(); }
     else mostrarLogin();
   }catch(e){
     console.warn('No se pudo verificar la sesión (sin conexión?). Se permite el uso local sin sincronizar.', e);
@@ -2183,11 +2184,13 @@ async function hacerLogin(){
     if(error) throw error;
     mostrarApp();
     refrescarContadorCapturas();
+    mostrarBotonSync();
   }catch(e){
     errEl.textContent = 'Email o contraseña incorrectos.';
   }
   btn.disabled = false; btn.textContent = 'Entrar';
 }
+function mostrarBotonSync(){ document.getElementById('btnSyncTodo').style.display = ''; }
 document.getElementById('btnLogin').addEventListener('click', hacerLogin);
 document.getElementById('loginPassword').addEventListener('keydown', e=>{ if(e.key === 'Enter') hacerLogin(); });
 
@@ -2214,6 +2217,21 @@ async function eliminarAgendaEspejo(pedidoId){
     console.warn('No se pudo eliminar de la agenda espejo.', e);
   }
 }
+
+async function sincronizarTodo(){
+  if(!supa) return;
+  const btn = document.getElementById('btnSyncTodo');
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Sincronizando…';
+  try{
+    await Promise.all(state.pedidos.map(p => sincronizarAgendaEspejo(p)));
+    alert('Listo: se sincronizaron ' + state.pedidos.length + ' pedidos con la agenda del celu.');
+  }catch(e){
+    alert('Hubo un problema sincronizando. Revisá tu conexión e intentá de nuevo.');
+  }
+  btn.disabled = false; btn.textContent = original;
+}
+document.getElementById('btnSyncTodo').addEventListener('click', sincronizarTodo);
 
 /* ================= SUPABASE: buzón de capturas del celu ================= */
 async function contarCapturasPendientes(){
